@@ -1,0 +1,39 @@
+# Node modules
+node_modules/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build and cache files
+dist/
+build/
+.cache/
+.tmp/
+
+# Dependency locks (اختياري)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# VSCode and local configs
+.vscode/
+.qodo/
+
+# Optional: Ignore uploads or temp folders if you have any
+uploads/
+temp/
