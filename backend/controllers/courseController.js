@@ -4583,138 +4583,186 @@ exports.addReview = async (req, res, next) => {
 //     next(error);
 //   }
 // };
+// Update your searchCourses function in courseController.js
 
 exports.searchCourses = async (req, res, next) => {
   try {
-    const { query, role, userId, limit = 20, page = 1 } = req.query;
-    console.log("Search request:", { query, role, userId, user: req.user });
+    const { 
+      query, 
+      category, 
+      level, 
+      minPrice, 
+      maxPrice, 
+      minRating,
+      minDuration,
+      maxDuration,
+      language,
+      features,
+      sortBy = "newest",
+      page = 1, 
+      limit = 12 
+    } = req.query;
 
-    // Validate query parameter
-    if (!query || query.trim().length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: "Search query is required"
-      });
+    console.log("Search filters received:", {
+      query, category, level, minPrice, maxPrice, minRating,
+      minDuration, maxDuration, language, features, sortBy, page, limit
+    });
+
+    // Build filter object
+    const filter = {};
+    
+    // Access control - only show published courses for public/non-admin users
+    if (!req.user || req.user.role !== 'admin') {
+      filter.status = 'published';
+      filter.isPublished = true;
     }
 
-    const searchTerm = query.trim();
-    
-    // Early return for very short queries
-    if (searchTerm.length < 2) {
-      return res.status(200).json({
-        success: true,
-        data: { courses: [] },
-        count: 0,
-        pagination: {
-          currentPage: parseInt(page),
-          totalPages: 0,
-          totalItems: 0,
-          itemsPerPage: parseInt(limit)
-        }
-      });
+    // Text search
+    if (query && query.trim().length > 0) {
+      const searchTerm = query.trim();
+      filter.$or = [
+        { title: { $regex: searchTerm, $options: 'i' } },
+        { subtitle: { $regex: searchTerm, $options: 'i' } },
+        { description: { $regex: searchTerm, $options: 'i' } },
+        { category: { $regex: searchTerm, $options: 'i' } }
+      ];
     }
 
-    // Build optimized filter
-    const filter = await buildSearchFilter(req, searchTerm);
-    
-    // Optimized projection - only select fields needed for search results
-    const projection = {
-      title: 1,
-      subtitle: 1,
-      description: 1,
-      image: 1,
-      price: 1,
-      category: 1,
-      level: 1,
-      studentsEnrolled: 1,
-      "ratings.average": 1,
-      instructor: 1,
-      duration: 1,
-      isPublished: 1,
-      createdAt: 1
-    };
+    // Category filter
+    if (category && category.length > 0) {
+      if (Array.isArray(category)) {
+        filter.category = { $in: category };
+      } else {
+        filter.category = { $regex: category, $options: 'i' };
+      }
+    }
 
-    // Pagination calculation
+    // Level filter
+    if (level && level.length > 0) {
+      if (Array.isArray(level)) {
+        filter.level = { $in: level };
+      } else {
+        filter.level = level;
+      }
+    }
+
+    // Price range filter
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = parseFloat(minPrice);
+      if (maxPrice) filter.price.$lte = parseFloat(maxPrice);
+    }
+
+    // Duration range filter - use totalHours from your model
+    if (minDuration || maxDuration) {
+      filter.totalHours = {};
+      if (minDuration) filter.totalHours.$gte = parseFloat(minDuration);
+      if (maxDuration) filter.totalHours.$lte = parseFloat(maxDuration);
+    }
+
+    // Rating filter
+    if (minRating) {
+      filter['ratings.average'] = { $gte: parseFloat(minRating) };
+    }
+
+    // Language filter
+    if (language && language !== 'all') {
+      filter.language = { $regex: language, $options: 'i' };
+    }
+
+    // Features filter (if you add features field to your model)
+    if (features && features.length > 0) {
+      if (Array.isArray(features)) {
+        filter.features = { $in: features };
+      } else {
+        filter.features = features;
+      }
+    }
+
+    console.log("Final MongoDB filter:", JSON.stringify(filter, null, 2));
+
+    // Build sort object
+    let sort = {};
+    switch (sortBy) {
+      case 'newest':
+        sort = { createdAt: -1 };
+        break;
+      case 'popular':
+        sort = { studentsEnrolled: -1 };
+        break;
+      case 'rating':
+        sort = { 'ratings.average': -1 };
+        break;
+      case 'price-low':
+        sort = { price: 1 };
+        break;
+      case 'price-high':
+        sort = { price: -1 };
+        break;
+      case 'duration-short':
+        sort = { totalHours: 1 };
+        break;
+      case 'duration-long':
+        sort = { totalHours: -1 };
+        break;
+      default:
+        sort = { createdAt: -1 };
+    }
+
+    // Pagination
     const pageNum = Math.max(1, parseInt(page));
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit))); // Cap at 100 for performance
+    const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
     const skip = (pageNum - 1) * limitNum;
 
-    console.time("SearchQueryExecution");
-    
-    // Execute search with optimized query
+    // Execute query
     const [courses, totalCount] = await Promise.all([
-      // Get paginated results - REMOVED textScore metadata
       Course.find(filter)
-        .select(projection)
-        .populate("instructor", "name avatar") // Only needed fields
-        .sort({ 
-          studentsEnrolled: -1, // Sort by popularity first
-          createdAt: -1 // Then by newest
-        })
+        .populate('instructor', 'name avatar')
+        .select('title subtitle description image price category level studentsEnrolled ratings instructor totalHours language createdAt')
+        .sort(sort)
         .skip(skip)
         .limit(limitNum)
-        .lean(), // Use lean for better performance (plain objects)
+        .lean(),
       
-      // Get total count for pagination
       Course.countDocuments(filter)
     ]);
 
-    console.timeEnd("SearchQueryExecution");
-
-    // Calculate relevance scores manually in JavaScript
-    const results = courses.map((course) => {
-      let relevanceScore = 0;
-      const searchLower = searchTerm.toLowerCase();
-      
-      // Calculate relevance based on field matching
-      if (course.title?.toLowerCase().includes(searchLower)) relevanceScore += 10;
-      if (course.subtitle?.toLowerCase().includes(searchLower)) relevanceScore += 5;
-      if (course.category?.toLowerCase().includes(searchLower)) relevanceScore += 3;
-      if (course.description?.toLowerCase().includes(searchLower)) relevanceScore += 1;
-
-      return {
-        id: course._id,
-        title: course.title,
-        subtitle: course.subtitle,
-        description: course.description,
-        image: course.image,
-        price: course.price,
-        category: course.category,
-        level: course.level,
-        studentsEnrolled: course.studentsEnrolled || 0,
-        ratings: course.ratings || { average: 0, count: 0 },
-        instructor: course.instructor,
-        duration: course.duration,
-        isEnrolled: false,
-        relevanceScore: relevanceScore
-      };
-    });
-
-    // Sort by relevance score (highest first)
-    results.sort((a, b) => b.relevanceScore - a.relevanceScore);
-
+    // Calculate pagination info
     const totalPages = Math.ceil(totalCount / limitNum);
+    const hasNextPage = pageNum < totalPages;
+    const hasPrevPage = pageNum > 1;
 
-    console.log(`Search completed: ${results.length} of ${totalCount} courses found`);
+    console.log(`Search results: ${courses.length} courses found out of ${totalCount}`);
+
+    // Format response to match frontend expectations
+    const results = courses.map(course => ({
+      id: course._id,
+      title: course.title,
+      subtitle: course.subtitle,
+      description: course.description,
+      image: course.image,
+      price: course.price,
+      category: course.category,
+      level: course.level,
+      studentsEnrolled: course.studentsEnrolled || 0,
+      ratings: course.ratings || { average: 0, count: 0 },
+      instructor: course.instructor,
+      duration: course.totalHours, // Map totalHours to duration for frontend
+      isEnrolled: false, // You can add enrollment check if needed
+      createdAt: course.createdAt
+    }));
 
     res.status(200).json({
       success: true,
-      data: { 
-        courses: results,
-        searchMeta: {
-          query: searchTerm,
-          totalCount,
-          executionTime: `${console.timeEnd("SearchQueryExecution")}ms`
-        }
-      },
+      data: results,
       count: results.length,
       pagination: {
         currentPage: pageNum,
         totalPages,
         totalItems: totalCount,
         itemsPerPage: limitNum,
-        hasNextPage: pageNum < totalPages,
-        hasPrevPage: pageNum > 1
+        hasNextPage,
+        hasPrevPage
       }
     });
 
@@ -4722,71 +4770,7 @@ exports.searchCourses = async (req, res, next) => {
     console.error("Search error:", error);
     next(error);
   }
-};
-
-// Helper function to build optimized search filter
-async function buildSearchFilter(req, searchTerm) {
-  let baseFilter = {};
-  const user = req.user;
-
-  // Determine access level
-  if (user) {
-    // Authenticated user
-    switch (user.role) {
-      case "student":
-        baseFilter = {
-          $or: [
-            { isPublished: true },
-            { "enrollments.user": user._id }
-          ]
-        };
-        break;
-      case "instructor":
-        baseFilter = { instructor: user._id };
-        break;
-      case "admin":
-        // Admin can see all courses
-        break;
-      default:
-        baseFilter = { isPublished: true };
-    }
-  } else if (req.query.role && req.query.userId) {
-    // Legacy support for query parameters
-    const { role, userId } = req.query;
-    if (role === "student") {
-      baseFilter = { isPublished: true };
-    } else if (role === "instructor") {
-      baseFilter = { instructor: userId };
-    } else if (role === "admin") {
-      // Admin can see all
-    }
-  } else {
-    // Public search - only published courses
-    baseFilter = { isPublished: true };
-  }
-
-  // Build optimized regex search for better performance
-  const searchRegex = new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-  
-  const searchFilter = {
-    $or: [
-      { title: searchRegex },
-      { subtitle: searchRegex },
-      { description: searchRegex },
-      { category: searchRegex }
-    ]
-  };
-
-  // Combine filters
-  if (Object.keys(baseFilter).length > 0) {
-    return {
-      $and: [baseFilter, searchFilter]
-    };
-  }
-
-  return searchFilter;
-}
-
+};  
 // Alternative: If you want to use MongoDB text search (requires text index)
 exports.searchCoursesWithTextIndex = async (req, res, next) => {
   try {

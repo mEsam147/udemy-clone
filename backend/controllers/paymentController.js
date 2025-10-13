@@ -2,6 +2,8 @@ const stripe = require("../config/stripe");
 const Course = require("../models/Course");
 const Enrollment = require("../models/Enrollment");
 const { sendNotification } = require("../services/notificationService");
+const User = require("../models/User");
+
 
 // @desc    Create checkout session
 // @route   POST /api/payment/checkout
@@ -89,7 +91,7 @@ exports.createCheckoutSession = async (req, res, next) => {
     }
 
     // FIXED: Use only the session ID in success URL, no extra parameters
-    const success_url = `${process.env.CLIENT_URL}/success?session_id={CHECKOUT_SESSION_ID}`;
+const success_url = `${process.env.CLIENT_URL}/success?session_id={CHECKOUT_SESSION_ID}`;
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -402,6 +404,415 @@ exports.verifyAndCreateEnrollment = async (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: error.message 
+    });
+  }
+};
+
+
+
+
+// In your paymentController.js - Update the PRICING_PLANS object
+const PRICING_PLANS = {
+  free: {
+    id: "free",
+    name: "Free",
+    price: 0,
+    features: [
+      "Access to free courses",
+      "Basic learning resources",
+      "Community support",
+      "Limited storage"
+    ],
+    maxStudents: 1,
+    stripePriceId: null
+  },
+  pro: {
+    id: "pro", 
+    name: "Pro",
+    price: 29,
+    features: [
+      "All free course features",
+      "Access to premium courses",
+      "Downloadable resources",
+      "Certificate of completion",
+      "Priority support",
+      "Unlimited storage"
+    ],
+    maxStudents: 1,
+    stripePriceId: process.env.STRIPE_PRO_PRICE_ID  // This will use your .env value
+  },
+  team: {
+    id: "team",
+    name: "Team", 
+    price: 99,
+    features: [
+      "All Pro features",
+      "Team management dashboard",
+      "Progress tracking for team",
+      "Custom branding",
+      "Dedicated account manager",
+      "API access"
+    ],
+    maxStudents: 10,
+    stripePriceId: process.env.STRIPE_TEAM_PRICE_ID  // This will use your .env value
+  }
+};
+
+// Create checkout session for pricing plans
+// In your paymentController.js - FIXED VERSION
+exports.createPlanCheckoutSession = async (req, res) => {
+  try {
+    console.log('🟡 createPlanCheckoutSession called with planId:', req.body.planId);
+    console.log('🔍 User:', req.user._id);
+    
+    const { planId } = req.body;
+    const user = req.user;
+
+    // Validate request body
+    if (!planId) {
+      return res.status(400).json({
+        success: false,
+        message: "Plan ID is required"
+      });
+    }
+
+    // DEBUG: Log all environment variables
+    console.log('🔍 ENVIRONMENT VARIABLES CHECK:');
+    console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
+    console.log('STRIPE_PRO_PRICE_ID:', process.env.STRIPE_PRO_PRICE_ID);
+    console.log('STRIPE_TEAM_PRICE_ID:', process.env.STRIPE_TEAM_PRICE_ID);
+    console.log('STRIPE_SECRET_KEY exists:', !!process.env.STRIPE_SECRET_KEY);
+    console.log('NODE_ENV:', process.env.NODE_ENV);
+
+    // Validate plan exists
+    const plan = PRICING_PLANS[planId];
+    if (!plan) {
+      console.error('❌ Invalid plan requested:', planId);
+      return res.status(400).json({
+        success: false,
+        message: "Invalid plan selected. Available plans: free, pro, team"
+      });
+    }
+
+    console.log('✅ Plan validated:', plan.name);
+    console.log('🔍 Plan stripePriceId:', plan.stripePriceId);
+
+    // Check if FRONTEND_URL is set
+    if (!process.env.FRONTEND_URL) {
+      console.error('❌ FRONTEND_URL is not set in environment variables');
+      return res.status(500).json({
+        success: false,
+        message: "Server configuration error: FRONTEND_URL is required",
+        details: "Please set FRONTEND_URL in your .env file"
+      });
+    }
+
+    // Handle free plan (no payment needed)
+    if (planId === 'free') {
+      try {
+        // Update user to free plan
+        user.subscription = {
+          plan: 'free',
+          status: 'active',
+          startedAt: new Date()
+        };
+        await user.save();
+
+        console.log('✅ Free plan activated for user:', user._id);
+        
+        return res.status(200).json({
+          success: true,
+          message: "Free plan activated successfully",
+          plan: plan
+        });
+      } catch (error) {
+        console.error('❌ Error activating free plan:', error);
+        return res.status(500).json({
+          success: false,
+          message: "Failed to activate free plan"
+        });
+      }
+    }
+
+    // For paid plans, validate Stripe price ID
+    if (!plan.stripePriceId) {
+      console.error(`❌ Stripe price ID not configured for plan: ${planId}`);
+      console.error(`❌ Expected STRIPE_${planId.toUpperCase()}_PRICE_ID in environment`);
+      return res.status(500).json({
+        success: false,
+        message: `Plan configuration error: Stripe price ID not set for ${plan.name} plan`,
+        details: `Please set STRIPE_${planId.toUpperCase()}_PRICE_ID in your .env file`
+      });
+    }
+
+    // Validate and format FRONTEND_URL
+    let frontendUrl = process.env.FRONTEND_URL.trim();
+    
+    // Remove any trailing slashes
+    frontendUrl = frontendUrl.replace(/\/+$/, '');
+    
+    // Ensure URL has proper protocol
+    if (!frontendUrl.startsWith('http://') && !frontendUrl.startsWith('https://')) {
+      const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+      frontendUrl = `${protocol}://${frontendUrl}`;
+      console.warn('⚠️  FRONTEND_URL missing protocol, defaulting to:', frontendUrl);
+    }
+
+    console.log('✅ Using frontend URL:', frontendUrl);
+    console.log('✅ Using Stripe price ID:', plan.stripePriceId);
+
+    // Create Stripe checkout session for paid plans
+    console.log('🟡 Creating Stripe checkout session...');
+    
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: plan.stripePriceId,
+          quantity: 1,
+        },
+      ],
+      mode: 'subscription',
+      success_url: `${frontendUrl}/success?session_id={CHECKOUT_SESSION_ID}&plan=${planId}`,
+      cancel_url: `${frontendUrl}/pricing`,
+      customer_email: user.email,
+      client_reference_id: user._id.toString(),
+      metadata: {
+        planId: planId,
+        userId: user._id.toString(),
+        userEmail: user.email
+      },
+      subscription_data: {
+        metadata: {
+          planId: planId,
+          userId: user._id.toString()
+        }
+      }
+    });
+
+    console.log('✅ Stripe checkout session created:', session.id);
+    console.log('🔗 Success URL:', session.success_url);
+
+    res.status(200).json({
+      success: true,
+      sessionId: session.id,
+      message: `Checkout session created for ${plan.name} plan`
+    });
+
+  } catch (error) {
+    console.error('❌ Checkout session error:', error);
+    
+    let errorMessage = error.message;
+    if (error.type === 'StripeInvalidRequestError') {
+      errorMessage = 'Invalid Stripe configuration. Please check your Stripe keys and price IDs.';
+    }
+    
+    res.status(500).json({
+      success: false,
+      message: errorMessage,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+};
+
+// Get user's current plan
+exports.getUserPlan = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        plan: user.subscription?.plan || 'free',
+        status: user.subscription?.status || 'inactive',
+        features: PRICING_PLANS[user.subscription?.plan || 'free']?.features || []
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Update user plan (admin only)
+exports.updateUserPlan = async (req, res) => {
+  try {
+    const { userId, planId } = req.body;
+    
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    const plan = PRICING_PLANS[planId];
+    if (!plan) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid plan"
+      });
+    }
+
+    user.subscription = {
+      plan: planId,
+      status: 'active',
+      startedAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: `User plan updated to ${plan.name}`,
+      data: user.subscription
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+
+// In your paymentController.js - Add this function
+exports.verifySubscription = async (req, res) => {
+  try {
+    const { sessionId } = req.body;
+    
+    console.log('🟡 Verifying subscription for session:', sessionId);
+    
+    // Retrieve the checkout session from Stripe
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['subscription', 'customer']
+    });
+    
+    console.log('🔍 Session details:', {
+      payment_status: session.payment_status,
+      subscription: session.subscription,
+      metadata: session.metadata
+    });
+    
+    if (session.payment_status === 'paid') {
+      const user = await User.findById(req.user._id);
+      const planId = session.metadata.planId;
+      
+      // Validate subscription data exists
+      if (!session.subscription) {
+        console.error('❌ No subscription found in session');
+        return res.status(400).json({
+          success: false,
+          message: 'Subscription data not found. Please try again or contact support.'
+        });
+      }
+      
+      // Safe date handling with fallbacks
+      let currentPeriodStart = new Date();
+      let currentPeriodEnd = new Date();
+      
+      // Set period end to 30 days from now as fallback
+      currentPeriodEnd.setDate(currentPeriodEnd.getDate() + 30);
+      
+      // Use actual dates from Stripe if available
+      if (session.subscription.current_period_start) {
+        currentPeriodStart = new Date(session.subscription.current_period_start * 1000);
+      }
+      
+      if (session.subscription.current_period_end) {
+        currentPeriodEnd = new Date(session.subscription.current_period_end * 1000);
+      }
+      
+      console.log('📅 Date values:', {
+        current_period_start: session.subscription.current_period_start,
+        current_period_end: session.subscription.current_period_end,
+        calculated_start: currentPeriodStart,
+        calculated_end: currentPeriodEnd
+      });
+      
+      // Validate dates are valid
+      if (isNaN(currentPeriodStart.getTime())) {
+        console.warn('⚠️ Invalid start date, using current date');
+        currentPeriodStart = new Date();
+      }
+      
+      if (isNaN(currentPeriodEnd.getTime())) {
+        console.warn('⚠️ Invalid end date, using 30 days from now');
+        currentPeriodEnd = new Date();
+        currentPeriodEnd.setDate(currentPeriodEnd.getDate() + 30);
+      }
+      
+      // Update user's subscription
+      user.subscription = {
+        plan: planId,
+        status: 'active',
+        stripeSubscriptionId: session.subscription.id,
+        stripeCustomerId: session.customer,
+        currentPeriodStart: currentPeriodStart,
+        currentPeriodEnd: currentPeriodEnd,
+        cancelAtPeriodEnd: false,
+        startedAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      // Also update plan features based on the subscription
+      if (planId === 'pro') {
+        user.planFeatures = {
+          maxCourses: 10,
+          maxStudents: 100,
+          canCreateCourses: true,
+          hasAnalytics: true,
+          hasCustomBranding: false
+        };
+      } else if (planId === 'team') {
+        user.planFeatures = {
+          maxCourses: 50,
+          maxStudents: 1000,
+          canCreateCourses: true,
+          hasAnalytics: true,
+          hasCustomBranding: true
+        };
+      }
+      
+      console.log('💾 Saving user with subscription:', {
+        plan: user.subscription.plan,
+        status: user.subscription.status,
+        periodStart: user.subscription.currentPeriodStart,
+        periodEnd: user.subscription.currentPeriodEnd
+      });
+      
+      await user.save();
+      
+      console.log('✅ Subscription activated successfully for user:', user._id);
+      
+      return res.status(200).json({
+        success: true,
+        message: `Successfully subscribed to ${planId} plan`,
+        subscription: user.subscription,
+        planFeatures: user.planFeatures
+      });
+    }
+    
+    console.log('❌ Payment not completed, status:', session.payment_status);
+    res.status(400).json({
+      success: false,
+      message: 'Payment not completed'
+    });
+    
+  } catch (error) {
+    console.error('❌ Subscription verification error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+      // Include more details for debugging
+      details: process.env.NODE_ENV === 'development' ? {
+        stack: error.stack,
+        sessionId: req.body.sessionId
+      } : undefined
     });
   }
 };

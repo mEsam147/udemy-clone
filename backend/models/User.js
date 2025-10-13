@@ -149,6 +149,48 @@ const userSchema = new mongoose.Schema(
       default: "active",
     },
 
+    subscription: {
+      plan: {
+        type: String,
+        enum: ["free", "pro", "team"],
+        default: "free",
+      },
+      status: {
+        type: String,
+        enum: ["active", "inactive", "canceled", "past_due"],
+        default: "inactive",
+      },
+      stripeSubscriptionId: String,
+      currentPeriodStart: Date,
+      currentPeriodEnd: Date,
+      cancelAtPeriodEnd: Boolean,
+      startedAt: Date,
+      updatedAt: Date,
+    },
+
+    planFeatures: {
+      maxCourses: {
+        type: Number,
+        default: 3,
+      },
+      maxStudents: {
+        type: Number,
+        default: 1,
+      },
+      canCreateCourses: {
+        type: Boolean,
+        default: false,
+      },
+      hasAnalytics: {
+        type: Boolean,
+        default: false,
+      },
+      hasCustomBranding: {
+        type: Boolean,
+        default: false,
+      },
+    },
+
     // Deactivation fields
     deactivatedAt: Date,
     deactivatedBy: {

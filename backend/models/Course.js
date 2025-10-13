@@ -313,7 +313,6 @@
 
 // // module.exports = mongoose.model("Course", courseSchema);
 
-
 // const mongoose = require("mongoose");
 // const slugify = require("slugify");
 
@@ -459,8 +458,6 @@
 
 // module.exports = mongoose.model("Course", courseSchema);
 
-
-
 // models/Course.js
 const mongoose = require("mongoose");
 const slugify = require("slugify");
@@ -473,10 +470,10 @@ const courseSchema = new mongoose.Schema(
       trim: true,
       maxlength: [100, "Title cannot exceed 100 characters"],
     },
-    slug: { 
-      type: String, 
+    slug: {
+      type: String,
       unique: true,
-      lowercase: true 
+      lowercase: true,
     },
     subtitle: {
       type: String,
@@ -572,18 +569,26 @@ const courseSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    features: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
     publishedAt: Date,
     lastUpdated: Date,
   },
+
   {
     timestamps: true,
-    toJSON: { 
+    toJSON: {
       virtuals: true,
-      transform: function(doc, ret) {
+      transform: function (doc, ret) {
         ret.id = ret._id;
         delete ret._id;
         return ret;
-      }
+      },
     },
     toObject: { virtuals: true },
   }
@@ -622,16 +627,18 @@ courseSchema.index({ createdAt: -1 });
 // Middleware
 courseSchema.pre("save", async function (next) {
   if (this.isModified("title")) {
-    let baseSlug = slugify(this.title, { 
-      lower: true, 
+    let baseSlug = slugify(this.title, {
+      lower: true,
       strict: true,
-      remove: /[*+~.()'"!:@]/g 
+      remove: /[*+~.()'"!:@]/g,
     });
     let slug = baseSlug;
     let counter = 1;
 
     // Check for existing slugs
-    while (await mongoose.model("Course").findOne({ slug, _id: { $ne: this._id } })) {
+    while (
+      await mongoose.model("Course").findOne({ slug, _id: { $ne: this._id } })
+    ) {
       slug = `${baseSlug}-${counter}`;
       counter++;
     }
@@ -657,24 +664,27 @@ courseSchema.pre("save", async function (next) {
 });
 
 // Static methods
-courseSchema.statics.findBySlug = function(slug) {
-  return this.findOne({ slug }).populate("instructor", "name avatar bio expertise");
+courseSchema.statics.findBySlug = function (slug) {
+  return this.findOne({ slug }).populate(
+    "instructor",
+    "name avatar bio expertise"
+  );
 };
 
-courseSchema.statics.findPublished = function() {
+courseSchema.statics.findPublished = function () {
   return this.find({ status: "published", isPublished: true });
 };
 
-courseSchema.statics.findByInstructor = function(instructorId) {
+courseSchema.statics.findByInstructor = function (instructorId) {
   return this.find({ instructor: instructorId });
 };
 
-courseSchema.statics.findByCategory = function(category) {
+courseSchema.statics.findByCategory = function (category) {
   return this.find({ category, status: "published" });
 };
 
 // Instance methods
-courseSchema.methods.updateRating = async function() {
+courseSchema.methods.updateRating = async function () {
   const Review = mongoose.model("Review");
   const stats = await Review.aggregate([
     { $match: { course: this._id } },
@@ -682,9 +692,9 @@ courseSchema.methods.updateRating = async function() {
       $group: {
         _id: "$course",
         averageRating: { $avg: "$rating" },
-        ratingCount: { $sum: 1 }
-      }
-    }
+        ratingCount: { $sum: 1 },
+      },
+    },
   ]);
 
   if (stats.length > 0) {
@@ -698,28 +708,28 @@ courseSchema.methods.updateRating = async function() {
   await this.save();
 };
 
-courseSchema.methods.canPublish = function() {
+courseSchema.methods.canPublish = function () {
   const errors = [];
-  
+
   if (!this.description || this.description.length < 50) {
     errors.push("Description must be at least 50 characters");
   }
-  
+
   if (!this.image) {
     errors.push("Course image is required");
   }
-  
+
   if (this.lecturesCount === 0) {
     errors.push("Course must have at least one lesson");
   }
-  
+
   if (!this.whatYoullLearn || this.whatYoullLearn.length === 0) {
     errors.push("Learning objectives are required");
   }
-  
+
   return {
     canPublish: errors.length === 0,
-    errors
+    errors,
   };
 };
 
