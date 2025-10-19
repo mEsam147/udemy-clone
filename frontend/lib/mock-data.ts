@@ -1,0 +1,176 @@
+import type { Course, User, Category, Review } from "./types"
+
+// Mock data for development - TODO: Replace with real API calls
+
+export const mockInstructor: User = {
+  id: "1",
+  email: "instructor@example.com",
+  full_name: "Dr. Sarah Johnson",
+  avatar_url: "/professional-instructor-avatar.png",
+  role: "instructor",
+  created_at: "2024-01-01T00:00:00Z",
+  updated_at: "2024-01-01T00:00:00Z",
+}
+
+export const mockCategories: Category[] = [
+  { id: "1", name: "Web Development", slug: "web-development", icon: "Code" },
+  { id: "2", name: "Data Science", slug: "data-science", icon: "BarChart" },
+  { id: "3", name: "Design", slug: "design", icon: "Palette" },
+  { id: "4", name: "Business", slug: "business", icon: "Briefcase" },
+  { id: "5", name: "Marketing", slug: "marketing", icon: "Megaphone" },
+]
+
+export const mockCourses: Course[] = [
+  {
+    id: "1",
+    title: "Complete React Development Course",
+    description: "Master React from basics to advanced concepts including hooks, context, and modern patterns.",
+    short_description: "Learn React development from scratch with hands-on projects",
+    thumbnail_url: "/react-course-thumbnail.jpg",
+    preview_video_url: "/placeholder.mp4",
+    price: 99.99,
+    currency: "USD",
+    level: "intermediate",
+    category: "Web Development",
+    tags: ["React", "JavaScript", "Frontend"],
+    instructor_id: "1",
+    instructor: mockInstructor,
+    rating: 4.8,
+    total_ratings: 1250,
+    total_students: 5420,
+    duration_hours: 24,
+    language: "English",
+    status: "published",
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-01T00:00:00Z",
+    sections: [
+      {
+        id: "1",
+        course_id: "1",
+        title: "Getting Started with React",
+        order_index: 1,
+        lessons: [
+          {
+            id: "1",
+            section_id: "1",
+            title: "Introduction to React",
+            duration_seconds: 900,
+            order_index: 1,
+            is_preview: true,
+            resources: [],
+          },
+          {
+            id: "2",
+            section_id: "1",
+            title: "Setting up Development Environment",
+            duration_seconds: 1200,
+            order_index: 2,
+            is_preview: false,
+            resources: [],
+          },
+        ],
+      },
+    ],
+    what_you_learn: [
+      "Build modern React applications",
+      "Understand React hooks and context",
+      "Implement state management",
+      "Create reusable components",
+    ],
+    requirements: ["Basic JavaScript knowledge", "HTML and CSS fundamentals", "Computer with internet connection"],
+  },
+  {
+    id: "2",
+    title: "Python Data Science Masterclass",
+    description: "Complete guide to data science with Python, pandas, numpy, and machine learning.",
+    short_description: "Master data science with Python and machine learning",
+    thumbnail_url: "/python-data-science-course.png",
+    price: 129.99,
+    currency: "USD",
+    level: "beginner",
+    category: "Data Science",
+    tags: ["Python", "Data Science", "Machine Learning"],
+    instructor_id: "1",
+    instructor: mockInstructor,
+    rating: 4.9,
+    total_ratings: 890,
+    total_students: 3200,
+    duration_hours: 32,
+    language: "English",
+    status: "published",
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-01T00:00:00Z",
+    sections: [],
+    what_you_learn: [
+      "Python programming fundamentals",
+      "Data analysis with pandas",
+      "Machine learning algorithms",
+      "Data visualization techniques",
+    ],
+    requirements: ["No prior programming experience needed", "Computer with Python installed"],
+  },
+]
+
+export const mockReviews: Review[] = [
+  {
+    id: "1",
+    user_id: "2",
+    course_id: "1",
+    rating: 5,
+    comment: "Excellent course! Very comprehensive and well-structured.",
+    created_at: "2024-01-15T00:00:00Z",
+    user: {
+      id: "2",
+      email: "student@example.com",
+      full_name: "John Doe",
+      avatar_url: "/student-avatar.png",
+      role: "student",
+      created_at: "2024-01-01T00:00:00Z",
+      updated_at: "2024-01-01T00:00:00Z",
+    },
+  },
+  {
+    id: "2",
+    user_id: "3",
+    course_id: "1",
+    rating: 4,
+    comment: "Great content, but could use more practical examples.",
+    created_at: "2024-01-20T00:00:00Z",
+    user: {
+      id: "3",
+      email: "student2@example.com",
+      full_name: "Jane Smith",
+      avatar_url: "/female-student-avatar.png",
+      role: "student",
+      created_at: "2024-01-01T00:00:00Z",
+      updated_at: "2024-01-01T00:00:00Z",
+    },
+  },
+]
+
+export const mockTestimonials = [
+  {
+    id: "1",
+    name: "Alex Chen",
+    role: "Software Engineer at Google",
+    avatar: "/professional-male-avatar.png",
+    content: "The courses here transformed my career. The quality of instruction is unmatched.",
+    rating: 5,
+  },
+  {
+    id: "2",
+    name: "Maria Rodriguez",
+    role: "Data Scientist at Microsoft",
+    avatar: "/professional-female-avatar.png",
+    content: "I went from beginner to landing my dream job in just 6 months. Highly recommended!",
+    rating: 5,
+  },
+  {
+    id: "3",
+    name: "David Kim",
+    role: "UX Designer at Apple",
+    avatar: "/creative-professional-avatar.png",
+    content: "The practical approach and real-world projects made all the difference.",
+    rating: 5,
+  },
+]

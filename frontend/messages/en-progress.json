@@ -1,0 +1,13 @@
+{
+  "progress": {
+    "title": "Learning Progress",
+    "description": "Track your learning journey and achievements across all courses",
+    "activeCourses": "Active Courses",
+    "completedCourses": "Completed",
+    "achievements": "Achievements",
+    "certificates": "Certificates",
+    "inProgress": "In Progress",
+    "completed": "Completed",
+    "lastAccessed": "Last accessed: {date}"
+  }
+}
