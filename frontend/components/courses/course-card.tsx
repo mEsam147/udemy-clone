@@ -1,4 +1,4 @@
-// components/courses/course-card.tsx - COMPLETE FIXED VERSION
+// components/courses/course-card.tsx - CLEANED VERSION
 "use client";
 
 import { useLocale } from "next-intl";
@@ -22,7 +22,6 @@ import {
   Lock,
   CheckCircle,
   Download,
-  GitCompareIcon,
 } from "lucide-react";
 import { CoursePreview } from "@/components/courses/course-preview";
 import type { Course, Lesson } from "@/lib/types";
@@ -34,7 +33,6 @@ import {
 } from "@/lib/utils";
 import { useCourseLessons } from "@/hooks/useCourses";
 import { useToast } from "@/hooks/use-toast";
-import { useCompareList } from "@/hooks/useCompare";
 import { useState } from "react";
 
 interface CourseCardProps {
@@ -55,14 +53,7 @@ export function CourseCard({
   const locale = useLocale();
   const { toast } = useToast();
 
-  const { addToCompare, removeFromCompare, isInCompareList } = useCompareList();
-  const [isComparing, setIsComparing] = useState(false);
-
-  // Get course ID and check if it's in compare list
-  const courseId = course._id || course.id;
-  const isInCompare = isInCompareList(courseId);
-
-  console.log("🔄 CourseCard - Rendered for course:" , course)
+  console.log("🔄 CourseCard - Rendered for course:", course)
 
   // Course data with safe defaults
   const title = getSafeValue(course.title, "Untitled Course");
@@ -90,52 +81,8 @@ export function CourseCard({
   const instructorName = course.instructor?.name || "Unknown Instructor";
   const instructorAvatar = course.instructor?.avatar || "";
 
-  // Handle compare click with validation
-  const handleCompareClick = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-
-    console.log("🔄 CourseCard - Compare clicked for course:", {
-      courseId,
-      title,
-      hasValidId: courseId && courseId.length === 24
-    });
-
-    setIsComparing(true);
-
-    try {
-      if (isInCompare) {
-        console.log("🔄 Removing from compare:", courseId);
-        removeFromCompare(courseId);
-        toast({
-          title: "Removed from Comparison",
-          description: `${title} removed from comparison.`,
-        });
-      } else {
-        console.log("🔄 Adding to compare:", courseId);
-        
-        // Validate course ID before adding
-        if (!courseId || courseId.length !== 24) {
-          throw new Error(`Invalid course ID: ${courseId}. Cannot add to comparison.`);
-        }
-        
-        addToCompare(course);
-        toast({
-          title: "Added to Comparison",
-          description: `${title} added to comparison.`,
-        });
-      }
-    } catch (error: any) {
-      console.error("❌ CourseCard - Compare error:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update comparison list",
-        variant: "destructive",
-      });
-    } finally {
-      setIsComparing(false);
-    }
-  };
+  // Get course ID
+  const courseId = course._id ?? course.id;
 
   // Fetch lessons for this course
   const { data: lessonsData, isLoading: lessonsLoading } = useCourseLessons(
@@ -178,7 +125,7 @@ export function CourseCard({
     .map((lesson: Lesson) => ({
       id: lesson.id,
       title: lesson.title,
-      duration: lesson.duration
+      duration: lesson?.duration
         ? `${Math.floor(lesson.duration / 60)}:${(lesson.duration % 60)
             .toString()
             .padStart(2, "0")}`
@@ -244,9 +191,6 @@ export function CourseCard({
     (total, lesson) => total + (lesson.resources?.length || 0),
     0
   );
-
-  // Check if course has valid ID for comparison
-  const hasValidCourseId = courseId && courseId.length === 24;
 
   // List View
   if (viewMode === "list") {
@@ -332,34 +276,6 @@ export function CourseCard({
                       `$${price.toFixed(2)}`
                     )}
                   </div>
-
-                  {/* Compare Button */}
-                  {hasValidCourseId && (
-                    <Button
-                      variant={isInCompare ? "default" : "outline"}
-                      size="sm"
-                      onClick={handleCompareClick}
-                      disabled={isComparing}
-                      className="min-w-[100px]"
-                    >
-                      {isComparing ? (
-                        <>
-                          <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin mr-1" />
-                          ...
-                        </>
-                      ) : isInCompare ? (
-                        <>
-                          <CheckCircle className="w-4 h-4 mr-1" />
-                          Added
-                        </>
-                      ) : (
-                        <>
-                          <GitCompareIcon className="w-4 h-4 mr-1" />
-                          Compare
-                        </>
-                      )}
-                    </Button>
-                  )}
                 </div>
               </div>
 
@@ -596,41 +512,6 @@ export function CourseCard({
                 </div>
               )}
             </div>
-
-            {/* Compare Button - Only show if course has valid ID */}
-            {hasValidCourseId && (
-              <Button
-                variant={isInCompare ? "default" : "outline"}
-                size="sm"
-                onClick={handleCompareClick}
-                disabled={isComparing}
-                className="w-full mb-2"
-              >
-                {isComparing ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-                    Processing...
-                  </>
-                ) : isInCompare ? (
-                  <>
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Added to Compare
-                  </>
-                ) : (
-                  <>
-                    <GitCompareIcon className="w-4 h-4 mr-2" />
-                    Add to Compare
-                  </>
-                )}
-              </Button>
-            )}
-
-            {/* Show message if course has invalid ID */}
-            {!hasValidCourseId && (
-              <div className="text-xs text-muted-foreground text-center mb-2 p-2 bg-muted rounded">
-                Cannot compare - Invalid course data
-              </div>
-            )}
           </CardContent>
         </CardHeader>
 

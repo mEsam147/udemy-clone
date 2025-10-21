@@ -151,8 +151,8 @@ export function CourseGrid({
           className={viewMode === "grid" ? "h-full" : ""}
         >
           <div className={viewMode === "grid" ? "h-full flex flex-col" : ""}>
-            <CourseCard 
-              course={course} 
+            <CourseCard
+              course={course}
               viewMode={viewMode}
               onCourseClick={onCourseClick}
               canAccess={canAccessCourse(course)}

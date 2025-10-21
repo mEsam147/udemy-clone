@@ -15,8 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { LanguageSwitcher } from "@/components/language-switcher";
-import { BookOpen, User, Settings, LogOut, Menu, X, GraduationCap, BarChart3, Home, Info } from "lucide-react";
+import { BookOpen, User, Settings, LogOut, Menu, X, BarChart3, Home, Info, Users } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { logout } from "@/services/auth.service";
 import { useRouter } from "next/navigation";
@@ -67,8 +66,9 @@ export function Navbar() {
   // Navigation items with icons
   const navItems = [
     { href: "/", label: t("home"), icon: Home },
-    { href: "/about", label: "About", icon: Info },
     { href: "/courses", label: t("courses"), icon: BookOpen },
+    { href: "/instructors", label: "Instructors", icon: Users },
+    { href: "/about", label: "About", icon: Info },
   ];
 
   const isActive = (href: string) => {
@@ -91,10 +91,11 @@ export function Navbar() {
     >
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          {/* Logo with simplified animation */}
+          {/* Logo */}
           <motion.div
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.2 }}
+            className="flex-shrink-0"
           >
             <Link href="/" className="flex items-center gap-2">
               <div className="relative">
@@ -106,22 +107,22 @@ export function Navbar() {
             </Link>
           </motion.div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-1">
+          {/* Desktop Navigation - Hidden on mobile */}
+          <div className="hidden lg:flex items-center gap-1 flex-1 justify-center max-w-2xl mx-8">
             {navItems.map((item) => {
               const IconComponent = item.icon;
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 group ${
+                  className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 group min-w-[100px] justify-center ${
                     isActive(item.href)
                       ? "text-brand-primary bg-brand-primary/10 font-semibold"
                       : "text-foreground/80 hover:text-brand-primary hover:bg-brand-primary/5"
                   }`}
                 >
-                  {IconComponent && <IconComponent className="h-4 w-4" />}
-                  {item.label}
+                  {IconComponent && <IconComponent className="h-4 w-4 flex-shrink-0" />}
+                  <span className="truncate">{item.label}</span>
                   {isActive(item.href) && (
                     <div className="absolute bottom-0 left-1/2 w-1 h-1 bg-brand-primary rounded-full transform -translate-x-1/2" />
                   )}
@@ -130,17 +131,14 @@ export function Navbar() {
             })}
           </div>
 
-          {/* Search Bar */}
-          <div className="hidden lg:block flex-1 max-w-xl mx-8">
+          {/* Search Bar - Hidden on mobile, shown on medium screens and up */}
+          <div className="hidden md:block flex-1 max-w-xl mx-4 lg:mx-8">
             <SearchBar />
           </div>
 
           {/* Right Side */}
           <div className="flex items-center gap-2">
-            <div className="transition-transform hover:scale-105">
-              <LanguageSwitcher />
-            </div>
-
+            {/* Theme Toggle */}
             <div className="transition-transform hover:scale-105">
               <ThemeToggle />
             </div>
@@ -191,18 +189,9 @@ export function Navbar() {
 
                   <DropdownMenuItem asChild>
                     <Button variant="ghost" className="w-full justify-start" asChild>
-                      <Link href="/learn">
-                        <GraduationCap className="mr-2 h-4 w-4" />
-                        <span>My Learning</span>
-                      </Link>
-                    </Button>
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem asChild>
-                    <Button variant="ghost" className="w-full justify-start" asChild>
                       <Link href="/instructors">
-                        <User className="mr-2 h-4 w-4" />
-                        <span>Instructor</span>
+                        <Users className="mr-2 h-4 w-4" />
+                        <span>Instructors</span>
                       </Link>
                     </Button>
                   </DropdownMenuItem>
@@ -250,7 +239,7 @@ export function Navbar() {
             )}
 
             {/* Mobile Menu Button */}
-            <div className="md:hidden transition-transform hover:scale-110">
+            <div className="lg:hidden transition-transform hover:scale-110 ml-2">
               <Button
                 variant="ghost"
                 size="sm"
@@ -291,25 +280,30 @@ export function Navbar() {
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2 }}
-              className="md:hidden border-t border-border/30 overflow-hidden"
+              className="lg:hidden border-t border-border/30 overflow-hidden"
             >
               <div className="py-4 space-y-4">
-                <SearchBar />
+                {/* Mobile Search Bar */}
+                <div className="px-4">
+                  <SearchBar />
+                </div>
+
+                {/* Mobile Navigation Items */}
                 {navItems.map((item) => {
                   const IconComponent = item.icon;
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 w-full ${
                         isActive(item.href)
                           ? "text-brand-primary bg-brand-primary/10 border-l-4 border-brand-primary font-semibold"
                           : "text-foreground/80 hover:text-brand-primary hover:bg-brand-primary/5 border-l-4 border-transparent"
                       }`}
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      {IconComponent && <IconComponent className="h-4 w-4" />}
-                      {item.label}
+                      {IconComponent && <IconComponent className="h-4 w-4 flex-shrink-0" />}
+                      <span className="flex-1">{item.label}</span>
                     </Link>
                   );
                 })}
@@ -317,24 +311,23 @@ export function Navbar() {
                 {isAuthenticated && user ? (
                   <>
                     {[
-                      { href: "/learn", label: "My Learning", icon: GraduationCap },
-                      { href: "/instructor", label: "Instructor", icon: User },
-                      { href: getDashboardLink(), label: "Dashboard", icon: BarChart3 }, // Updated dashboard link
+                      { href: "/instructors", label: "Instructors", icon: Users },
+                      { href: getDashboardLink(), label: "Dashboard", icon: BarChart3 },
                     ].map((item) => (
                       <Link
                         key={item.href}
                         href={item.href}
-                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-foreground/80 hover:text-brand-primary hover:bg-brand-primary/5 transition-all duration-200 border-l-4 border-transparent"
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-foreground/80 hover:text-brand-primary hover:bg-brand-primary/5 transition-all duration-200 border-l-4 border-transparent w-full"
                         onClick={() => setIsMenuOpen(false)}
                       >
-                        <item.icon className="h-4 w-4" />
-                        {item.label}
+                        <item.icon className="h-4 w-4 flex-shrink-0" />
+                        <span className="flex-1">{item.label}</span>
                       </Link>
                     ))}
                   </>
                 ) : (
-                  <div className="flex flex-col gap-2 pt-2">
-                    <Button variant="ghost" asChild>
+                  <div className="flex flex-col gap-2 pt-2 px-4">
+                    <Button variant="ghost" asChild className="w-full">
                       <Link
                         href="/auth/signin"
                         onClick={() => setIsMenuOpen(false)}
@@ -343,7 +336,7 @@ export function Navbar() {
                       </Link>
                     </Button>
                     <Button
-                      className="bg-gradient-to-r from-brand-primary to-brand-secondary hover:from-brand-primary/90 hover:to-brand-secondary/90"
+                      className="bg-gradient-to-r from-brand-primary to-brand-secondary hover:from-brand-primary/90 hover:to-brand-secondary/90 w-full"
                       asChild
                     >
                       <Link

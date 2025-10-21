@@ -314,7 +314,7 @@ const handleDeleteNotification = (notificationId: string) => {
 const handleLogout = async () => {
 try {
 await authService.logout();
-      router.push("/auth/login");
+      router.push("/auth/signin");
     } catch (error: any) {
 toast({
         title: "❌ Logout Failed",

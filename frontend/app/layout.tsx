@@ -47,6 +47,7 @@ export default function RootLayout({
         <Providers>
           <Suspense fallback={null}>
             <AuthProvider>
+
               <ThemeProvider
                 attribute="class"
                 defaultTheme="system"
@@ -56,6 +57,7 @@ export default function RootLayout({
                 {children}
                 <Toaster />
               </ThemeProvider>
+
             </AuthProvider>
           </Suspense>
         </Providers>

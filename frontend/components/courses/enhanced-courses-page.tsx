@@ -41,7 +41,6 @@ import type {
 import { CustomPagination } from "../ui/custom-pagination";
 import { CourseComparison } from "./course-comparison";
 import { useAuth } from "@/context/AuthContext";
-import { useCompareList, useCompareSummary } from "@/hooks/useCompare";
 
 interface EnhancedCoursesPageProps {
   initialCourses?: Course[];
@@ -132,15 +131,8 @@ export function EnhancedCoursesPage({
     useState<SearchFilters>(initialFilters);
 
   // Use compare hooks
-  const { 
-    addToCompare, 
-    removeFromCompare, 
-    clearCompareList, 
-    isInCompareList,
-    getCompareList 
-  } = useCompareList();
-
-  const { compareList, count: compareCount, canAddMore } = useCompareSummary();
+ ;
+;
 
   // Determine if we need to fetch from API or use initial data
   const hasActiveFilters = useMemo(() => {
@@ -658,23 +650,7 @@ export function EnhancedCoursesPage({
             </div>
           </div>
 
-          {compareList.length > 0 && (
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => setShowComparison(true)}
-              className="flex items-center gap-2 border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary"
-            >
-              <Compare className="h-4 w-4" />
-              Compare ({compareList.length})
-              <Badge
-                variant="secondary"
-                className="bg-primary text-primary-foreground"
-              >
-                {compareList.length}
-              </Badge>
-            </Button>
-          )}
+
         </div>
 
         <div className="flex items-center gap-4 w-full lg:w-auto">
@@ -797,7 +773,6 @@ export function EnhancedCoursesPage({
                   canAccessCourse={canAccessCourse}
                   isPremiumUser={isPremiumUser}
                   onAddToCompare={handleAddToCompare}
-                  compareList={compareList}
                 />
               </motion.div>
             </AnimatePresence>

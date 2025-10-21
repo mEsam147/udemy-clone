@@ -678,14 +678,14 @@ export const getAllCourses = async (params?: Record<string, any>) => {
 export const getCourse = async (identifier: string): Promise<Course> => {
   return retryWithBackoff(async () => {
     const response = await fetchWrapper(`/courses/${identifier}`, "GET");
-    
+
     if (!response.success) {
       throw new Error(response.message || "Failed to fetch course details");
     }
 
     const courseData = response.data || response;
 
-    
+
 
     return courseData;
   });
@@ -906,7 +906,7 @@ export const updateInstructorApplication = async (
 export const getAllInstructors = async (): Promise<{ data: any[] }> => {
   return retryWithBackoff(async () => {
      fetchWrapper("/courses/instructors/all");
-    
+
   });
 };
 
@@ -1052,5 +1052,19 @@ export const getEnrollmentStatus = async (courseId: string, userId: string) => {
   return retryWithBackoff(async () => {
     const response = await fetchWrapper(`/enrollments/${courseId}/enrolled`);
     return response.data || response;
+  });
+};
+
+
+// services/course.service.ts - Add this function
+export const getLessonById = async (lessonId: string): Promise<{ lesson: Lesson; course: Course }> => {
+  return retryWithBackoff(async () => {
+    const response = await fetchWrapper(`/courses/lessons/${lessonId}`, "GET");
+
+    if (!response.success) {
+      throw new Error(response.message || "Failed to fetch lesson");
+    }
+
+    return response.data;
   });
 };
