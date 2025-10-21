@@ -156,6 +156,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         credentials: "include",
       });
 
+      console.log("Auth check response:", res);
       if (!res.ok) {
         setIsAuthenticated(false);
         setUser(null);
