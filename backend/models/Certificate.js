@@ -1,16 +1,16 @@
 // models/Certificate.js
-const mongoose = require("mongoose");
+const mongoose = require('mongoose')
 
 const certificateSchema = new mongoose.Schema(
   {
     student: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
     },
     course: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Course",
+      ref: 'Course',
       required: true,
     },
     issueDate: {
@@ -34,9 +34,9 @@ const certificateSchema = new mongoose.Schema(
   {
     timestamps: true,
   }
-);
+)
 
 // One certificate per student per course
-certificateSchema.index({ student: 1, course: 1 }, { unique: true });
+certificateSchema.index({ student: 1, course: 1 }, { unique: true })
 
-module.exports = mongoose.model("Certificate", certificateSchema);
+module.exports = mongoose.model('Certificate', certificateSchema)
