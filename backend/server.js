@@ -330,7 +330,7 @@ app.use(helmet())
 // THEN CORS with proper configuration
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    origin: "https://udemy-clone-sigma.vercel.app"||process.env.CLIENT_URL || 'http://localhost:3000',
     credentials: true, // Allow cookies to be sent
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   })
