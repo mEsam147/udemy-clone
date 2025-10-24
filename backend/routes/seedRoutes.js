@@ -12,64 +12,73 @@ const slugify = require('slugify')
 
 faker.seed(123) // For reproducible fake data
 
-// Real Cloudinary URLs for images and videos
-const REAL_IMAGES = [
-  'https://res.cloudinary.com/demo/image/upload/v1704821234/course1.jpg',
-  'https://res.cloudinary.com/demo/image/upload/v1704821235/course2.jpg',
-  'https://res.cloudinary.com/demo/image/upload/v1704821236/course3.jpg',
-  'https://res.cloudinary.com/demo/image/upload/v1704821237/course4.jpg',
-  'https://res.cloudinary.com/demo/image/upload/v1704821238/course5.jpg',
-  'https://res.cloudinary.com/demo/image/upload/v1704821239/course6.jpg',
-  'https://res.cloudinary.com/demo/image/upload/v1704821240/course7.jpg',
-  'https://res.cloudinary.com/demo/image/upload/v1704821241/course8.jpg',
-  'https://res.cloudinary.com/demo/image/upload/v1704821242/course9.jpg',
-  'https://res.cloudinary.com/demo/image/upload/v1704821243/course10.jpg',
+// High-quality free images from Unsplash (education/tech themed)
+const COURSE_IMAGES = [
+  'https://images.unsplash.com/photo-1496171367470-9ed9a91ea931?w=800&h=400&fit=crop', // Programming
+  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=400&fit=crop', // Design
+  'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=400&fit=crop', // Data Science
+  'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800&h=400&fit=crop', // Marketing
+  'https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&h=400&fit=crop', // Business
+  'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=400&fit=crop', // Analytics
+  'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=800&h=400&fit=crop', // Development
+  'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=400&fit=crop', // Teamwork
+  'https://images.unsplash.com/photo-1547658719-da2b51169166?w=800&h=400&fit=crop', // Mobile
+  'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&h=400&fit=crop', // Coding
 ]
 
-const REAL_VIDEOS = [
+// Free stock video URLs (educational/demo videos)
+const LESSON_VIDEOS = [
   {
-    url: 'https://res.cloudinary.com/demo/video/upload/v1704821300/lesson1.mp4',
+    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
     public_id: 'lesson_video_1',
     format: 'mp4',
-    bytes: 15728640,
+    bytes: 104857600,
   },
   {
-    url: 'https://res.cloudinary.com/demo/video/upload/v1704821301/lesson2.mp4',
+    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
     public_id: 'lesson_video_2',
     format: 'mp4',
-    bytes: 20971520,
+    bytes: 94371840,
   },
   {
-    url: 'https://res.cloudinary.com/demo/video/upload/v1704821302/lesson3.mp4',
+    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
     public_id: 'lesson_video_3',
     format: 'mp4',
-    bytes: 12582912,
+    bytes: 83886080,
   },
   {
-    url: 'https://res.cloudinary.com/demo/video/upload/v1704821303/lesson4.mp4',
+    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
     public_id: 'lesson_video_4',
     format: 'mp4',
-    bytes: 18874368,
+    bytes: 73400320,
   },
   {
-    url: 'https://res.cloudinary.com/demo/video/upload/v1704821304/lesson5.mp4',
+    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
     public_id: 'lesson_video_5',
     format: 'mp4',
-    bytes: 16777216,
+    bytes: 62914560,
   },
 ]
 
-const REAL_AVATARS = [
-  'https://res.cloudinary.com/demo/image/upload/v1704821400/avatar1.jpg',
-  'https://res.cloudinary.com/demo/image/upload/v1704821401/avatar2.jpg',
-  'https://res.cloudinary.com/demo/image/upload/v1704821402/avatar3.jpg',
-  'https://res.cloudinary.com/demo/image/upload/v1704821403/avatar4.jpg',
-  'https://res.cloudinary.com/demo/image/upload/v1704821404/avatar5.jpg',
+// High-quality avatar images from Unsplash
+const USER_AVATARS = [
   'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
   'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
   'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face',
   'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&h=150&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=150&h=150&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=150&h=150&fit=crop&crop=face',
+  'https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?w=150&h=150&fit=crop&crop=face',
+]
+
+// Certificate template images
+const CERTIFICATE_TEMPLATES = [
+  'https://images.unsplash.com/photo-1557683316-973673baf926?w=600&h=400&fit=crop', // Certificate 1
+  'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=600&h=400&fit=crop', // Certificate 2
+  'https://images.unsplash.com/photo-1589998059171-988d887df646?w=600&h=400&fit=crop', // Certificate 3
 ]
 
 const COURSE_CATEGORIES = [
@@ -124,7 +133,7 @@ const generateUniqueSlug = async (title, existingSlugs = []) => {
 
 const seedDatabase = async (req, res) => {
   try {
-    console.log('Starting seeding process with real Cloudinary assets...')
+    console.log('Starting seeding process with high-quality dummy data...')
 
     // Clear existing data
     await User.deleteMany({})
@@ -144,7 +153,7 @@ const seedDatabase = async (req, res) => {
         email: `student${i}@example.com`,
         password: '$2a$12$LQv3c1yqBzwS0eDjV2C4OuBr7JZM2BsjJYIVFQ3QzRZ5rW5W5W5W', // password123
         role: 'student',
-        avatar: faker.helpers.arrayElement(REAL_AVATARS),
+        avatar: faker.helpers.arrayElement(USER_AVATARS),
         bio: faker.person.bio(),
         isVerified: true,
         notificationSettings: {
@@ -158,25 +167,45 @@ const seedDatabase = async (req, res) => {
       students.push(student)
     }
 
-    // Generate 5 Instructors
+    // Generate 5 Instructors with realistic bios
     const instructors = []
-    const instructorExpertise = [
-      ['JavaScript', 'React', 'Node.js'],
-      ['Python', 'Data Science', 'Machine Learning'],
-      ['UI/UX Design', 'Figma', 'Adobe Creative Suite'],
-      ['Digital Marketing', 'SEO', 'Content Strategy'],
-      ['Mobile Development', 'Flutter', 'Firebase'],
+    const instructorData = [
+      {
+        name: 'Sarah Johnson',
+        expertise: ['JavaScript', 'React', 'Node.js'],
+        bio: 'Senior Full Stack Developer with 8+ years of experience. Passionate about teaching modern web technologies.',
+      },
+      {
+        name: 'Dr. Michael Chen',
+        expertise: ['Python', 'Data Science', 'Machine Learning'],
+        bio: 'Data Scientist and AI researcher. PhD in Computer Science from Stanford University.',
+      },
+      {
+        name: 'Emily Rodriguez',
+        expertise: ['UI/UX Design', 'Figma', 'Adobe Creative Suite'],
+        bio: 'Award-winning UI/UX designer with 6 years of experience in product design and user research.',
+      },
+      {
+        name: 'David Kim',
+        expertise: ['Digital Marketing', 'SEO', 'Content Strategy'],
+        bio: 'Digital marketing expert who has helped businesses grow their online presence by 300%.',
+      },
+      {
+        name: 'Alex Thompson',
+        expertise: ['Mobile Development', 'Flutter', 'Firebase'],
+        bio: 'Mobile app developer specializing in cross-platform development with Flutter and React Native.',
+      },
     ]
 
-    for (let i = 1; i <= 5; i++) {
+    for (let i = 0; i < 5; i++) {
       const instructor = {
-        name: faker.person.fullName(),
-        email: `instructor${i}@example.com`,
-        password: '$2a$12$LQv3c1yqBzwS0eDjV2C4OuBr7JZM2BsjJYIVFQ3QzRZ5rW5W5W5W', // password123
+        name: instructorData[i].name,
+        email: `instructor${i + 1}@example.com`,
+        password: '$2a$12$LQv3c1yqBzwS0eDjV2C4OuBr7JZM2BsjJYIVFQ3QzRZ5rW5W5W5W',
         role: 'instructor',
-        avatar: faker.helpers.arrayElement(REAL_AVATARS),
-        bio: faker.lorem.paragraphs(2),
-        expertise: instructorExpertise[i - 1],
+        avatar: USER_AVATARS[i],
+        bio: instructorData[i].bio,
+        expertise: instructorData[i].expertise,
         instructorApplication: {
           status: 'approved',
           submittedAt: faker.date.past(),
@@ -185,12 +214,12 @@ const seedDatabase = async (req, res) => {
           availability: 'within-24-hours',
           responseTime: 'Typically responds within 24 hours',
           officeHours: 'Mon-Fri, 9AM-5PM EST',
-          contactEmail: `instructor${i}@example.com`,
+          contactEmail: `instructor${i + 1}@example.com`,
         },
         instructorStats: {
-          totalStudents: faker.number.int({ min: 50, max: 500 }),
-          totalRevenue: faker.number.int({ min: 1000, max: 50000 }),
-          averageRating: parseFloat((Math.random() * 2 + 3).toFixed(1)),
+          totalStudents: faker.number.int({ min: 500, max: 2000 }),
+          totalRevenue: faker.number.int({ min: 50000, max: 200000 }),
+          averageRating: parseFloat((Math.random() * 0.5 + 4.5).toFixed(1)), // 4.5 - 5.0
           totalCourses: 6,
         },
       }
@@ -203,9 +232,9 @@ const seedDatabase = async (req, res) => {
       const admin = {
         name: `Admin ${faker.person.lastName()}`,
         email: `admin${i}@example.com`,
-        password: '$2a$12$LQv3c1yqBzwS0eDjV2C4OuBr7JZM2BsjJYIVFQ3QzRZ5rW5W5W5W', // password123
+        password: '$2a$12$LQv3c1yqBzwS0eDjV2C4OuBr7JZM2BsjJYIVFQ3QzRZ5rW5W5W5W',
         role: 'admin',
-        avatar: faker.helpers.arrayElement(REAL_AVATARS),
+        avatar: USER_AVATARS[i + 5],
         bio: 'Platform administrator with extensive experience in education technology.',
         isVerified: true,
       }
@@ -221,68 +250,138 @@ const seedDatabase = async (req, res) => {
     const createdInstructors = createdUsers.slice(20, 25)
     const createdAdmins = createdUsers.slice(25)
 
-    // Generate 30 Courses (6 per instructor)
+    // Generate 30 Courses with realistic data
     const courses = []
-    const courseTitles = [
-      'Complete Web Development Bootcamp 2024',
-      'Advanced JavaScript Patterns and Practices',
-      'React Native Mobile App Development',
-      'Python for Data Science and Machine Learning',
-      'UI/UX Design Fundamentals',
-      'Digital Marketing Mastery',
-      'Full Stack Development with MERN',
-      'Node.js Backend Development',
-      'GraphQL API Design and Implementation',
-      'AWS Cloud Practitioner Essentials',
-      'iOS App Development with SwiftUI',
-      'Android Development with Kotlin',
-      'Machine Learning with TensorFlow',
-      'Deep Learning Specialization',
-      'Cybersecurity Fundamentals',
-      'Blockchain and Web3 Development',
-      'DevOps and CI/CD Pipeline',
-      'Docker and Kubernetes Mastery',
-      'Software Architecture Patterns',
-      'Agile Project Management',
-      'Content Marketing Strategy',
-      'Social Media Marketing Pro',
-      'Photography Masterclass',
-      'Video Editing with Premiere Pro',
-      'Music Production Fundamentals',
-      'Personal Finance and Investing',
-      'Business Startup Essentials',
-      'Public Speaking and Presentation',
-      'Yoga and Mindfulness Practice',
-      'Nutrition and Healthy Cooking',
+    const courseData = [
+      {
+        title: 'Complete Web Development Bootcamp 2024',
+        category: 'Web Development',
+        subcategory: 'Full Stack',
+        level: 'Beginner',
+        description:
+          'Learn web development from scratch. HTML, CSS, JavaScript, React, Node.js, MongoDB and more! Build real projects and become a full-stack developer.',
+        price: 89,
+      },
+      {
+        title: 'Advanced JavaScript Patterns and Practices',
+        category: 'Web Development',
+        subcategory: 'JavaScript',
+        level: 'Advanced',
+        description:
+          'Master advanced JavaScript concepts, design patterns, and best practices used by senior developers.',
+        price: 129,
+      },
+      {
+        title: 'React Native Mobile App Development',
+        category: 'Mobile Development',
+        subcategory: 'React Native',
+        level: 'Intermediate',
+        description:
+          'Build cross-platform mobile apps with React Native. Learn to create iOS and Android apps from a single codebase.',
+        price: 99,
+      },
+      {
+        title: 'Python for Data Science and Machine Learning',
+        category: 'Data Science',
+        subcategory: 'Python',
+        level: 'Intermediate',
+        description:
+          'Complete Data Science and Machine Learning course with Python. Pandas, NumPy, Scikit-learn, TensorFlow.',
+        price: 149,
+      },
+      {
+        title: 'UI/UX Design Fundamentals',
+        category: 'Graphic Design',
+        subcategory: 'UI/UX',
+        level: 'Beginner',
+        description:
+          'Learn the principles of user interface and user experience design. Create beautiful and functional designs.',
+        price: 79,
+      },
+      {
+        title: 'Digital Marketing Mastery',
+        category: 'Digital Marketing',
+        subcategory: 'Content Marketing',
+        level: 'All Levels',
+        description:
+          'Comprehensive digital marketing course covering SEO, social media, content marketing, and analytics.',
+        price: 119,
+      },
+      {
+        title: 'Full Stack Development with MERN',
+        category: 'Web Development',
+        subcategory: 'Full Stack',
+        level: 'Intermediate',
+        description:
+          'Master the MERN stack (MongoDB, Express, React, Node.js) and build modern web applications.',
+        price: 109,
+      },
+      {
+        title: 'Node.js Backend Development',
+        category: 'Web Development',
+        subcategory: 'Node.js',
+        level: 'Intermediate',
+        description:
+          'Learn to build scalable backend applications with Node.js, Express, and modern development tools.',
+        price: 99,
+      },
+      {
+        title: 'GraphQL API Design and Implementation',
+        category: 'Web Development',
+        subcategory: 'JavaScript',
+        level: 'Advanced',
+        description:
+          'Master GraphQL API design, implementation, and best practices for modern web applications.',
+        price: 139,
+      },
+      {
+        title: 'AWS Cloud Practitioner Essentials',
+        category: 'Web Development',
+        subcategory: 'Python',
+        level: 'Beginner',
+        description:
+          'Learn AWS cloud computing fundamentals and prepare for the AWS Cloud Practitioner certification.',
+        price: 159,
+      },
     ]
+
+    // Expand course data to 30 courses
+    const expandedCourseData = []
+    for (let i = 0; i < 30; i++) {
+      const baseCourse = courseData[i % courseData.length]
+      expandedCourseData.push({
+        ...baseCourse,
+        title: i < courseData.length ? baseCourse.title : `${baseCourse.title} - Advanced Edition`,
+        price: baseCourse.price + (i % 3) * 20,
+      })
+    }
 
     let courseIndex = 0
     for (let instrIdx = 0; instrIdx < createdInstructors.length; instrIdx++) {
       for (let courseIdx = 1; courseIdx <= 6; courseIdx++) {
-        const category = faker.helpers.arrayElement(COURSE_CATEGORIES)
-        const subcategory = faker.helpers.arrayElement(COURSE_SUBCATEGORIES[category])
+        const courseInfo = expandedCourseData[courseIndex]
 
         const course = {
-          title: courseTitles[courseIndex],
+          title: courseInfo.title,
           subtitle: faker.lorem.sentence({ min: 8, max: 12 }),
-          description: faker.lorem.paragraphs(4, '\n\n'),
+          description: courseInfo.description,
           instructor: createdInstructors[instrIdx]._id,
-          price: parseFloat(faker.commerce.price({ min: 19, max: 199, dec: 0 })),
-          image: REAL_IMAGES[courseIndex % REAL_IMAGES.length],
-          category: category,
-          subcategory: subcategory,
-          level: faker.helpers.arrayElement(['Beginner', 'Intermediate', 'Advanced', 'All Levels']),
+          price: courseInfo.price,
+          image: COURSE_IMAGES[courseIndex % COURSE_IMAGES.length],
+          category: courseInfo.category,
+          subcategory: courseInfo.subcategory,
+          level: courseInfo.level,
           language: 'en',
           ratings: {
-            average: parseFloat((Math.random() * 2 + 3).toFixed(1)), // 3.0 - 5.0
-            count: faker.number.int({ min: 10, max: 200 }),
+            average: parseFloat((Math.random() * 0.5 + 4.3).toFixed(1)), // 4.3 - 4.8
+            count: faker.number.int({ min: 50, max: 300 }),
           },
-          studentsEnrolled: faker.number.int({ min: 50, max: 1000 }),
+          studentsEnrolled: faker.number.int({ min: 200, max: 1500 }),
           requirements: [
             'Basic computer knowledge',
-            'Willingness to learn',
-            faker.lorem.sentence(),
-            faker.lorem.sentence(),
+            'Willingness to learn and practice',
+            'Internet connection',
+            'Modern web browser',
           ],
           whatYoullLearn: [
             'Master fundamental concepts and techniques',
@@ -290,21 +389,23 @@ const seedDatabase = async (req, res) => {
             'Develop professional-level skills',
             'Prepare for industry certifications',
             'Learn best practices and standards',
-            'Gain hands-on experience with tools',
-            faker.lorem.sentence(),
-            faker.lorem.sentence(),
+            'Gain hands-on experience with modern tools',
+            'Understand industry trends and requirements',
+            'Build a professional portfolio',
           ],
-          totalHours: faker.number.int({ min: 10, max: 40 }),
-          lecturesCount: faker.number.int({ min: 15, max: 30 }),
+          totalHours: faker.number.int({ min: 15, max: 45 }),
+          lecturesCount: faker.number.int({ min: 20, max: 35 }),
           status: 'published',
           isPublished: true,
-          isFeatured: courseIndex < 5, // First 5 courses are featured
+          isFeatured: courseIndex < 8, // First 8 courses are featured
           features: [
             'Lifetime access',
             'Certificate of completion',
             'Q&A support',
             'Downloadable resources',
             'Mobile and TV access',
+            'Exercises and projects',
+            'Community access',
           ],
           publishedAt: faker.date.past({ years: 1 }),
         }
@@ -332,7 +433,7 @@ const seedDatabase = async (req, res) => {
         await newCourse.save()
         createdCourses.push(newCourse)
 
-        console.log(`Created course: ${courseData.title} (slug: ${slug})`)
+        console.log(`Created course: ${courseData.title}`)
       } catch (error) {
         console.error(`Failed to create course "${courseData.title}":`, error.message)
       }
@@ -344,62 +445,108 @@ const seedDatabase = async (req, res) => {
       throw new Error('No courses were created. Cannot proceed with seeding.')
     }
 
-    // Generate Lessons with FIXED resources structure
+    // Generate Lessons with realistic content
     const lessons = []
-    const lessonTitles = [
-      'Introduction to the Course',
-      'Setting Up Development Environment',
-      'Understanding Basic Concepts',
-      'Hands-on Practice Session',
-      'Advanced Techniques and Methods',
-      'Project Setup and Configuration',
-      'Core Principles Explained',
-      'Practical Implementation Guide',
-      'Troubleshooting Common Issues',
-      'Best Practices and Standards',
-      'Real-world Case Studies',
-      'Performance Optimization',
-      'Security Considerations',
-      'Testing and Deployment',
-      'Future Trends and Updates',
+    const lessonTemplates = [
+      {
+        title: 'Introduction to the Course',
+        description:
+          "Get an overview of what you'll learn and set up your development environment.",
+      },
+      {
+        title: 'Setting Up Development Environment',
+        description: 'Install and configure all necessary tools and software for the course.',
+      },
+      {
+        title: 'Understanding Basic Concepts',
+        description: 'Learn the fundamental concepts that form the foundation of this technology.',
+      },
+      {
+        title: 'Hands-on Practice Session',
+        description: "Apply what you've learned through practical exercises and coding challenges.",
+      },
+      {
+        title: 'Advanced Techniques and Methods',
+        description: 'Dive deeper into advanced concepts and professional development techniques.',
+      },
+      {
+        title: 'Project Setup and Configuration',
+        description: 'Learn how to properly set up and configure real-world projects.',
+      },
+      {
+        title: 'Core Principles Explained',
+        description: 'Understand the core principles and best practices used by professionals.',
+      },
+      {
+        title: 'Practical Implementation Guide',
+        description: 'Step-by-step guide to implementing concepts in real projects.',
+      },
+      {
+        title: 'Troubleshooting Common Issues',
+        description: 'Learn how to identify and fix common problems and errors.',
+      },
+      {
+        title: 'Best Practices and Standards',
+        description: 'Discover industry best practices and coding standards.',
+      },
+      {
+        title: 'Real-world Case Studies',
+        description: 'Analyze real-world examples and case studies from successful projects.',
+      },
+      {
+        title: 'Performance Optimization',
+        description: 'Learn techniques to optimize performance and efficiency.',
+      },
+      {
+        title: 'Security Considerations',
+        description: 'Understand security best practices and common vulnerabilities.',
+      },
+      {
+        title: 'Testing and Deployment',
+        description: 'Learn how to properly test and deploy your applications.',
+      },
+      {
+        title: 'Future Trends and Updates',
+        description: 'Explore emerging trends and future developments in the field.',
+      },
     ]
 
     for (const course of createdCourses) {
-      const numLessons = faker.number.int({ min: 8, max: 15 })
+      const numLessons = faker.number.int({ min: 12, max: 20 })
       for (let lessonIdx = 1; lessonIdx <= numLessons; lessonIdx++) {
-        const video = faker.helpers.arrayElement(REAL_VIDEOS)
+        const video = faker.helpers.arrayElement(LESSON_VIDEOS)
+        const lessonTemplate = lessonTemplates[lessonIdx % lessonTemplates.length]
 
-        // Fixed resources structure - proper object format
         const resources = [
           {
             title: 'Lesson Slides and Notes',
-            url: 'https://res.cloudinary.com/demo/image/upload/v1704821500/slides.pdf',
+            url: 'https://example.com/resources/slides.pdf',
             type: 'pdf',
-            fileSize: 1024000, // 1MB in bytes
+            fileSize: 1024000,
             uploadedAt: faker.date.past(),
           },
           {
             title: 'Source Code Files',
-            url: 'https://res.cloudinary.com/demo/image/upload/v1704821501/code.zip',
+            url: 'https://example.com/resources/code.zip',
             type: 'zip',
-            fileSize: 2048000, // 2MB in bytes
+            fileSize: 2048000,
             uploadedAt: faker.date.past(),
           },
         ]
 
         const lesson = {
-          title: `${lessonTitles[lessonIdx % lessonTitles.length]} - Part ${lessonIdx}`,
-          description: faker.lorem.paragraphs(2, '\n\n'),
+          title: `${lessonTemplate.title} - Part ${lessonIdx}`,
+          description: lessonTemplate.description,
           video: {
             public_id: video.public_id,
             url: video.url,
             format: video.format,
             bytes: video.bytes,
           },
-          duration: faker.number.int({ min: 600, max: 3600 }),
+          duration: faker.number.int({ min: 900, max: 7200 }), // 15-120 minutes
           course: course._id,
           order: lessonIdx,
-          isPreview: lessonIdx <= 2,
+          isPreview: lessonIdx <= 3, // First 3 lessons are preview
           resources: resources,
         }
         lessons.push(lesson)
@@ -429,7 +576,7 @@ const seedDatabase = async (req, res) => {
     // Generate Enrollments
     const enrollments = []
     for (const student of createdStudents) {
-      const numEnrollments = faker.number.int({ min: 3, max: 8 })
+      const numEnrollments = faker.number.int({ min: 4, max: 10 })
       const availableCourses = faker.helpers.shuffle([...createdCourses]).slice(0, numEnrollments)
 
       for (const course of availableCourses) {
@@ -455,9 +602,9 @@ const seedDatabase = async (req, res) => {
           enrolledAt: faker.date.past({ years: 1 }),
           lastAccessed: faker.date.recent(),
           rating:
-            Math.random() > 0.3
+            Math.random() > 0.4
               ? {
-                  score: faker.number.int({ min: 3, max: 5 }),
+                  score: faker.number.int({ min: 4, max: 5 }),
                   review: faker.lorem.paragraph(),
                   ratedAt: faker.date.past(),
                 }
@@ -470,7 +617,7 @@ const seedDatabase = async (req, res) => {
     const createdEnrollments = await Enrollment.insertMany(enrollments)
     console.log(`Created ${createdEnrollments.length} enrollments`)
 
-    // Generate Certificates - FIXED VERSION (without enrollment field)
+    // Generate Certificates
     console.log('Creating certificates...')
     const createdCertificates = []
     const completedEnrollments = createdEnrollments.filter((e) => e.progress === 100)
@@ -478,7 +625,7 @@ const seedDatabase = async (req, res) => {
     // Track used verification codes to ensure uniqueness
     const usedVerificationCodes = new Set()
 
-    for (const enrollment of completedEnrollments.slice(0, 15)) {
+    for (const enrollment of completedEnrollments.slice(0, 25)) {
       try {
         const course = createdCourses.find((c) => c._id.toString() === enrollment.course.toString())
 
@@ -491,12 +638,12 @@ const seedDatabase = async (req, res) => {
         let verificationCode
         let attempts = 0
         do {
-          verificationCode = `CERT-${course._id.toString().slice(-8).toUpperCase()}-${faker.string
-            .alphanumeric(6)
+          verificationCode = `CERT-${course.slug.toUpperCase()}-${faker.string
+            .alphanumeric(8)
             .toUpperCase()}`
           attempts++
           if (attempts > 10) {
-            verificationCode = `CERT-${Date.now()}-${faker.string.alphanumeric(6).toUpperCase()}`
+            verificationCode = `CERT-${Date.now()}-${faker.string.alphanumeric(8).toUpperCase()}`
             break
           }
         } while (usedVerificationCodes.has(verificationCode))
@@ -506,10 +653,8 @@ const seedDatabase = async (req, res) => {
         const certificate = {
           student: enrollment.student,
           course: enrollment.course,
-          // Remove enrollment field since it's causing issues
           issueDate: faker.date.past(),
-          certificateUrl:
-            'https://res.cloudinary.com/demo/image/upload/v1704821600/certificate.pdf',
+          certificateUrl: faker.helpers.arrayElement(CERTIFICATE_TEMPLATES),
           verificationCode: verificationCode,
           approved: true,
         }
@@ -517,9 +662,6 @@ const seedDatabase = async (req, res) => {
         const newCertificate = new Certificate(certificate)
         await newCertificate.save()
         createdCertificates.push(newCertificate)
-        console.log(
-          `Created certificate for student ${enrollment.student} in course ${course.title}`
-        )
       } catch (error) {
         console.error(
           `Failed to create certificate for enrollment ${enrollment._id}:`,
@@ -538,34 +680,35 @@ const seedDatabase = async (req, res) => {
       'COURSE_UPDATED',
       'REVIEW_ADDED',
       'PAYMENT_SUCCESS',
+      'COURSE_COMPLETED',
     ]
 
     for (const user of createdUsers) {
-      const numNotifications = faker.number.int({ min: 3, max: 8 })
+      const numNotifications = faker.number.int({ min: 5, max: 12 })
 
       for (let i = 0; i < numNotifications; i++) {
         const type = faker.helpers.arrayElement(notificationTypes)
+        const course = faker.helpers.arrayElement(createdCourses)
         let message = ''
 
         switch (type) {
           case 'ENROLLMENT':
-            message = `You have been enrolled in ${
-              faker.helpers.arrayElement(createdCourses).title
-            }`
+            message = `You have been successfully enrolled in "${course.title}"`
             break
           case 'LESSON_COMPLETED':
-            message = `You completed a lesson in ${
-              faker.helpers.arrayElement(createdCourses).title
-            }`
+            message = `Great job! You completed a lesson in "${course.title}"`
             break
           case 'COURSE_UPDATED':
-            message = `New content added to ${faker.helpers.arrayElement(createdCourses).title}`
+            message = `New content has been added to "${course.title}"`
             break
           case 'REVIEW_ADDED':
-            message = 'Your review has been published'
+            message = 'Your course review has been published and is now visible to other students'
             break
           case 'PAYMENT_SUCCESS':
-            message = 'Your payment was processed successfully'
+            message = 'Your payment was processed successfully. Thank you for your purchase!'
+            break
+          case 'COURSE_COMPLETED':
+            message = `Congratulations! You've successfully completed "${course.title}"`
             break
         }
 
@@ -573,9 +716,9 @@ const seedDatabase = async (req, res) => {
           user: user._id,
           type: type,
           message: message,
-          course: Math.random() > 0.3 ? faker.helpers.arrayElement(createdCourses)._id : null,
+          course: course._id,
           read: faker.datatype.boolean(),
-          createdAt: faker.date.past({ months: 3 }),
+          createdAt: faker.date.past({ months: 6 }),
         }
         notifications.push(notification)
       }
@@ -586,16 +729,16 @@ const seedDatabase = async (req, res) => {
 
     // Generate Reviews
     const reviews = []
-    for (const enrollment of createdEnrollments.slice(0, 40)) {
+    for (const enrollment of createdEnrollments.slice(0, 60)) {
       const review = {
         user: enrollment.student,
         course: enrollment.course,
-        rating: faker.number.int({ min: 3, max: 5 }),
+        rating: faker.number.int({ min: 4, max: 5 }),
         comment: faker.lorem.paragraphs(1),
         helpful: {
-          count: faker.number.int({ min: 0, max: 10 }),
+          count: faker.number.int({ min: 0, max: 15 }),
           users: faker.helpers
-            .arrayElements(createdStudents, faker.number.int({ min: 0, max: 5 }))
+            .arrayElements(createdStudents, faker.number.int({ min: 0, max: 8 }))
             .map((u) => u._id),
         },
         createdAt: faker.date.past(),
@@ -625,7 +768,7 @@ const seedDatabase = async (req, res) => {
 
     // Add wishlist items for students
     for (const student of createdStudents) {
-      const numWishlist = faker.number.int({ min: 1, max: 4 })
+      const numWishlist = faker.number.int({ min: 2, max: 6 })
       const wishlistItems = faker.helpers
         .arrayElements(createdCourses, numWishlist)
         .map((c) => c._id)
@@ -663,19 +806,20 @@ const seedDatabase = async (req, res) => {
       },
     }
 
-    console.log('Seeding completed successfully!')
+    console.log('🎉 Seeding completed successfully!')
+    console.log('📊 Summary:', summary)
 
     if (res) {
       res.status(200).json({
         success: true,
-        message: 'Database seeded with real Cloudinary assets successfully',
+        message: 'Database seeded with high-quality dummy data successfully',
         summary,
       })
     }
 
     return summary
   } catch (error) {
-    console.error('Seeding error:', error)
+    console.error('❌ Seeding error:', error)
 
     if (res) {
       res.status(500).json({
