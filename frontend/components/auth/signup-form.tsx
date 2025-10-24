@@ -345,13 +345,18 @@ export function SignUpForm() {
         className="text-center"
       >
         <p className="text-sm text-muted-foreground">
-          {t("have_account")}{" "}
-          {/* <Link
+          Already have an account?
+          <Button asChild variant={"link"} className="text-blue">
+
+
+          <Link
             href={`/${locale}/auth/signin`}
             className="text-brand-primary hover:underline font-medium"
           >
-            {t("signin")}
-          </Link> */}
+            Login Now
+          </Link>
+
+           </Button>
         </p>
       </motion.div>
     </div>

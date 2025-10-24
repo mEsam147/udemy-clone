@@ -30,7 +30,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
             </span>
           </Link>
           <div className="flex items-center gap-2">
-            <LanguageSwitcher />
+            {/* <LanguageSwitcher /> */}
             <ThemeToggle />
           </div>
         </div>

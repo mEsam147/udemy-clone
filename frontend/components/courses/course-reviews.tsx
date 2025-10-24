@@ -30,6 +30,8 @@ import {
 import type { Review } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { reviewService } from "@/services/review.service";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 interface CourseReviewsProps {
   courseId: string;
@@ -55,7 +57,7 @@ const INITIAL_REVIEWS_COUNT = 5;
 // Safe data validation functions
 const safeReview = (review: any): Review | null => {
   if (!review || typeof review !== 'object') return null;
-  
+
   return {
     _id: review._id || review.id || `review-${Date.now()}`,
     user: {
@@ -90,12 +92,14 @@ export function CourseReviews({
   const t = useTranslations("courses");
   const { toast } = useToast();
 
+  const router = useRouter();
+  const {user} = useAuth()
   const [allReviews, setAllReviews] = useState<Review[]>(() => safeReviews(initialReviews));
   const [displayedReviews, setDisplayedReviews] = useState<Review[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMoreReviews, setHasMoreReviews] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  
+
   const [sortBy, setSortBy] = useState<SortOption>("recent");
   const [filterBy, setFilterBy] = useState<FilterOption>("all");
   const [showReviewForm, setShowReviewForm] = useState(false);
@@ -133,7 +137,7 @@ export function CourseReviews({
 
     const totalPages = Math.ceil(sortedReviews.length / REVIEWS_PER_PAGE);
     const endIndex = Math.min(currentPage * REVIEWS_PER_PAGE, sortedReviews.length);
-    
+
     setDisplayedReviews(sortedReviews.slice(0, endIndex));
     setHasMoreReviews(endIndex < sortedReviews.length);
   }, [allReviews, currentPage, sortBy, filterBy]);
@@ -177,7 +181,7 @@ export function CourseReviews({
 
   const handleLoadMore = () => {
     setIsLoadingMore(true);
-    
+
     // Simulate loading delay for better UX
     setTimeout(() => {
       setCurrentPage(prev => prev + 1);
@@ -191,7 +195,10 @@ export function CourseReviews({
 
   const handleHelpfulClick = async (reviewId: string) => {
     setHelpfulLoading(prev => new Set(prev).add(reviewId));
-    
+
+    if(!user){
+      router.push(`/auth/signin`);
+    }
     try {
       const response = await reviewService.markHelpful(reviewId);
       if (response.success) {
@@ -200,12 +207,12 @@ export function CourseReviews({
           if (review._id === reviewId) {
             const currentCount = review.helpful?.count || 0;
             const isHelpful = response.data.isHelpful;
-            
+
             return {
               ...review,
               helpful: {
                 count: isHelpful ? currentCount + 1 : Math.max(0, currentCount - 1),
-                users: isHelpful 
+                users: isHelpful
                   ? [...(review.helpful?.users || []), "current-user"]
                   : (review.helpful?.users || []).filter(id => id !== "current-user")
               },
@@ -217,8 +224,8 @@ export function CourseReviews({
 
         toast({
           title: response.data.isHelpful ? "Marked as helpful" : "Removed helpful mark",
-          description: response.data.isHelpful 
-            ? "Thank you for your feedback!" 
+          description: response.data.isHelpful
+            ? "Thank you for your feedback!"
             : "Helpful mark removed",
         });
       }
@@ -270,6 +277,10 @@ export function CourseReviews({
 
     setIsSubmitting(true);
 
+
+    if(!user){
+      router.push(`/auth/signin`);
+    }
     try {
       const response = await reviewService.addReview(courseId, {
         rating: newReview.rating,
@@ -634,8 +645,8 @@ export function CourseReviews({
                               variant="ghost"
                               size="sm"
                               className={`h-8 gap-1 ${
-                                review.userHasMarkedHelpful 
-                                  ? "text-green-600 bg-green-50 dark:bg-green-950" 
+                                review.userHasMarkedHelpful
+                                  ? "text-green-600 bg-green-50 dark:bg-green-950"
                                   : ""
                               }`}
                               onClick={() => handleHelpfulClick(review._id)}
@@ -700,7 +711,7 @@ export function CourseReviews({
                 )}
               </Button>
             )}
-            
+
             {currentPage > 1 && (
               <Button
                 onClick={handleShowLess}
@@ -718,8 +729,8 @@ export function CourseReviews({
             <div className="w-32 bg-secondary rounded-full h-2">
               <div
                 className="bg-primary h-2 rounded-full transition-all duration-500"
-                style={{ 
-                  width: `${Math.min(100, (showingCount / totalCount) * 100)}%` 
+                style={{
+                  width: `${Math.min(100, (showingCount / totalCount) * 100)}%`
                 }}
               />
             </div>

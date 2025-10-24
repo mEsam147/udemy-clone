@@ -41,7 +41,7 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
 
   // Show only 6 categories in the main section
   const displayedCategories = categories.slice(0, 6);
-  
+
   // Filter categories for modal based on search
   const filteredCategories = categories.filter(category =>
     category.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -49,7 +49,7 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
 
   const CategoryCard = ({ category, index, compact = false }: { category: Category; index: number; compact?: boolean }) => {
     const progressPercentage = getProgressPercentage(category.totalStudents);
-    
+
     return (
       <motion.div
         key={category.id}
@@ -62,7 +62,7 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
           compact ? 'h-full' : ''
         }`}>
           <div className={`flex items-center ${compact ? 'space-x-3' : 'space-x-4'}`}>
-            <motion.div 
+            <motion.div
               className={`${compact ? 'text-xl' : 'text-2xl'} group-hover:scale-110 transition-transform duration-300`}
               whileHover={{ rotate: 360 }}
               transition={{ duration: 0.6 }}
@@ -120,7 +120,7 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
 
   const CategoryListItem = ({ category, index }: { category: Category; index: number }) => {
     const progressPercentage = getProgressPercentage(category.totalStudents);
-    
+
     return (
       <motion.div
         key={category.id}
@@ -132,7 +132,7 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
         <Card className="p-4 hover:shadow-lg transition-all duration-300 cursor-pointer group border-border bg-card/50 backdrop-blur-sm hover:bg-card/80">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4 flex-1">
-              <motion.div 
+              <motion.div
                 className="text-2xl group-hover:scale-110 transition-transform duration-300"
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.6 }}
@@ -148,7 +148,7 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-6 text-right">
               {/* Rating */}
               <div className="flex items-center space-x-1">
@@ -157,7 +157,7 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
                 </span>
                 <div className="text-yellow-500">★</div>
               </div>
-              
+
               {/* Progress Bar */}
               <div className="w-32">
                 <div className="flex justify-between items-center mb-1">
@@ -226,12 +226,12 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
 
       {/* Categories Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden bg-background/95 backdrop-blur-md border-0">
+        <DialogContent className="max-w-4xl xl:min-w-5xl max-h-[90vh] overflow-hidden bg-background/95 backdrop-blur-md border-0">
           <DialogHeader className="relative">
             <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent text-center">
               All Course Categories
             </DialogTitle>
-            
+
             {/* Search Bar */}
             <div className="relative mt-6">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -277,8 +277,8 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
 
           {/* Categories Grid/List */}
           <div className={`overflow-y-auto custom-scrollbar-thin pr-4 max-h-[60vh] ${
-            viewMode === "grid" 
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" 
+            viewMode === "grid"
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
               : "space-y-3"
           }`}>
             <AnimatePresence mode="wait">

@@ -1,23 +1,27 @@
-// app/instructors/[id]/page.tsx
 "use client";
 
-import { useParams } from "next/navigation";
-import { motion } from "framer-motion";
+import { useParams, useSearchParams } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Star,
   Users,
   BookOpen,
   Award,
-  Globe,
   MapPin,
   Calendar,
   CheckCircle,
+  Globe,
   Youtube,
   Twitter,
   Linkedin,
   ArrowLeft,
   Share2,
-  Clock,
+  Bookmark,
+  GraduationCap,
+  Zap,
+  Sparkles,
+  User,
+  Target,
   TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,32 +32,60 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useInstructor } from "@/hooks/useInstructorQueries";
 import Link from "next/link";
 import Image from "next/image";
+import { useState, useEffect } from "react";
 
 export default function InstructorProfilePage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const instructorId = params.id as string;
+
+  // Get active tab from URL or default to "courses"
+  const urlTab = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(urlTab || "courses");
+  const [imageLoaded, setImageLoaded] = useState(false);
+
   const {
     data: instructorData,
     isLoading,
     error,
   } = useInstructor(instructorId);
 
+  useEffect(() => {
+    setImageLoaded(false);
+  }, [instructorId]);
+
+  // Update tab when URL changes
+  useEffect(() => {
+    if (urlTab) {
+      setActiveTab(urlTab);
+    }
+  }, [urlTab]);
+
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Instructor Not Found</h1>
-          <p className="text-muted-foreground mb-6">
-            The instructor you're looking for doesn't exist or may have been
-            removed.
-          </p>
-          <Button asChild>
-            <Link href="/instructors">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Instructors
-            </Link>
-          </Button>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/30 p-4">
+        <Card className="w-full max-w-md text-center border-0 shadow-2xl bg-background/80 backdrop-blur-sm">
+          <CardContent className="p-6 md:p-8">
+            <motion.div
+              animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <Target className="w-12 h-12 md:w-16 md:h-16 text-muted-foreground mx-auto mb-4" />
+            </motion.div>
+            <h1 className="text-xl md:text-2xl font-bold mb-4 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              Instructor Not Found
+            </h1>
+            <p className="text-muted-foreground mb-6 text-sm md:text-base">
+              The instructor you're looking for doesn't exist or may have been removed.
+            </p>
+            <Button asChild className="bg-gradient-to-r from-primary to-primary/80 w-full sm:w-auto">
+              <Link href="/instructors">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Instructors
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -63,10 +95,7 @@ export default function InstructorProfilePage() {
   }
 
   const instructor = instructorData?.data;
-
-  if (!instructor) {
-    return null;
-  }
+  if (!instructor) return null;
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -75,451 +104,519 @@ export default function InstructorProfilePage() {
     });
   };
 
-  const CourseCard = ({ course, index }: { course: any; index: number }) => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1 }}
-    >
-      <Card className="group hover:shadow-lg transition-all duration-300 border-border/50 hover:border-primary/20">
-        <CardContent className="p-0">
-          <div className="relative h-48 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-600/10" />
-            {course.image ? (
-              <Image
-                src={course.image}
-                alt={course.title}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                <BookOpen className="w-12 h-12 text-white/80" />
-              </div>
-            )}
-            <Badge className="absolute top-3 left-3 bg-white/90 text-gray-800 backdrop-blur-sm">
-              {course.level}
-            </Badge>
-          </div>
-          <div className="p-6">
-            <Badge variant="outline" className="mb-2">
-              {course.category}
-            </Badge>
-            <h3 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors line-clamp-2">
-              {course.title}
-            </h3>
-            <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-              {course.description}
-            </p>
-            <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1">
-                  <Users className="w-4 h-4" />
-                  {course.studentsEnrolled.toLocaleString()}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4 text-yellow-500" />
-                  {course.rating} ({course.totalReviews})
-                </div>
-              </div>
-              <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
-                {course.duration}h
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-lg">${course.price}</span>
-              <Button size="sm">Enroll Now</Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
+  // Simple tab configuration
+  const tabs = [
+    { value: "courses", label: "Courses", icon: BookOpen },
+    { value: "about", label: "About", icon: User },
+    { value: "reviews", label: "Reviews", icon: Star },
+  ];
+
+  // Stats configuration
+  const stats = [
+    {
+      icon: Star,
+      value: instructor.stats?.averageRating?.toFixed(1) || "4.5",
+      label: "Rating",
+      color: "text-yellow-500"
+    },
+    {
+      icon: Users,
+      value: instructor.stats?.totalStudents?.toLocaleString() || "0",
+      label: "Students",
+      color: "text-green-500"
+    },
+    {
+      icon: BookOpen,
+      value: instructor.stats?.totalCourses || "0",
+      label: "Courses",
+      color: "text-blue-500"
+    },
+    {
+      icon: TrendingUp,
+      value: instructor.stats?.totalReviews?.toLocaleString() || "0",
+      label: "Reviews",
+      color: "text-purple-500"
+    },
+  ];
+
+  // Social links configuration
+  const socialLinks = [
+    { icon: Globe, href: instructor.profile?.website, label: "Website" },
+    { icon: Youtube, href: instructor.profile?.socialLinks?.youtube, label: "YouTube" },
+    { icon: Twitter, href: instructor.profile?.socialLinks?.twitter, label: "Twitter" },
+    { icon: Linkedin, href: instructor.profile?.socialLinks?.linkedin, label: "LinkedIn" },
+  ];
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    // Update URL without page reload
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', value);
+    window.history.pushState({}, '', url.toString());
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-      {/* Header */}
-      <div className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-4 mb-6">
-            <Button asChild variant="ghost" size="sm">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/10">
+      {/* Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-20 -right-20 w-40 h-40 md:w-80 md:h-80 bg-primary/5 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-20 -left-20 w-40 h-40 md:w-80 md:h-80 bg-purple-500/5 rounded-full blur-3xl"></div>
+      </div>
+
+      {/* Header Section */}
+      <div className="relative bg-background/80 backdrop-blur-md border-b border-border/50">
+        <div className="container mx-auto px-4 py-4 md:py-6">
+          {/* Navigation */}
+          <div className="flex items-center gap-3 mb-6 md:mb-8 flex-wrap">
+            <Button asChild variant="ghost" size="sm" className="flex items-center gap-2">
               <Link href="/instructors">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Instructors
+                <ArrowLeft className="w-4 h-4" />
+                <span className="hidden sm:inline">Back to Instructors</span>
               </Link>
             </Button>
-            <Button variant="outline" size="sm">
-              <Share2 className="w-4 h-4 mr-2" />
-              Share Profile
-            </Button>
+
+            <div className="flex-1"></div>
+
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="gap-2">
+                <Bookmark className="w-4 h-4" />
+                <span className="hidden xs:inline">Save</span>
+              </Button>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Share2 className="w-4 h-4" />
+                <span className="hidden xs:inline">Share</span>
+              </Button>
+            </div>
           </div>
 
-          {/* Instructor Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col lg:flex-row gap-8 items-start"
-          >
+          {/* Instructor Info */}
+          <div className="flex flex-col lg:flex-row gap-6 items-start">
             {/* Avatar */}
-            <div className="relative">
-              <div className="w-32 h-32 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center text-white font-bold text-2xl relative overflow-hidden shadow-2xl">
-                {instructor.user.avatar ? (
-                  <Image
-                    src={instructor.user.avatar}
-                    alt={instructor.user.name}
-                    width={128}
-                    height={128}
-                    className="rounded-full object-cover"
-                  />
-                ) : (
-                  instructor.user.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")
+            <div className="flex flex-col items-center lg:items-start gap-4">
+              <div className="relative">
+                <div className="relative w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl md:text-2xl overflow-hidden shadow-2xl">
+                  {instructor.user?.avatar ? (
+                    <>
+                      <Image
+                        src={instructor.user.avatar}
+                        alt={instructor.user.name}
+                        width={128}
+                        height={128}
+                        className={`rounded-2xl object-cover transition-opacity duration-500 ${
+                          imageLoaded ? 'opacity-100' : 'opacity-0'
+                        }`}
+                        onLoad={() => setImageLoaded(true)}
+                      />
+                      {!imageLoaded && (
+                        <Skeleton className="w-full h-full absolute inset-0 rounded-2xl" />
+                      )}
+                    </>
+                  ) : (
+                    instructor.user?.name?.split(" ").map((n) => n[0]).join("") || "IN"
+                  )}
+                </div>
+
+                {instructor.isVerified && (
+                  <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full p-1 md:p-2 shadow-lg border-2 border-background">
+                    <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-white" />
+                  </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/20 rounded-full" />
               </div>
-              {instructor.isVerified && (
-                <motion.div
-                  className="absolute -bottom-2 -right-2 bg-blue-500 rounded-full p-2 shadow-lg"
-                  whileHover={{ scale: 1.1 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                >
-                  <CheckCircle className="w-6 h-6 text-white" />
-                </motion.div>
-              )}
-              {instructor.featured && (
-                <motion.div
-                  className="absolute -top-2 -left-2"
-                  animate={{
-                    rotate: [0, -10, 10, -10, 0],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    repeatType: "reverse",
-                  }}
-                >
-                  <Award className="w-6 h-6 text-yellow-500 fill-yellow-500" />
-                </motion.div>
-              )}
+
+              {/* Mobile Social Links */}
+              <div className="flex gap-2 lg:hidden">
+                {socialLinks.map((social, index) =>
+                  social.href && (
+                    <Button key={social.label} variant="outline" size="sm" asChild className="p-2">
+                      <Link href={social.href} target="_blank">
+                        <social.icon className="w-4 h-4" />
+                      </Link>
+                    </Button>
+                  )
+                )}
+              </div>
             </div>
 
             {/* Info */}
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 mb-4">
-                <div>
-                  <h1 className="text-3xl font-bold text-foreground mb-2">
-                    {instructor.user.name}
+            <div className="flex-1 min-w-0 space-y-4 md:space-y-6">
+              {/* Name and Location */}
+              <div className="space-y-2 md:space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                  <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-foreground via-primary/90 to-purple-600 bg-clip-text text-transparent break-words">
+                    {instructor.user?.name}
                   </h1>
-                  <div className="flex items-center gap-4 text-muted-foreground mb-4">
-                    <div className="flex items-center gap-1">
-                      <MapPin className="w-4 h-4" />
-                      {instructor.user.country}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
-                      Joined {formatDate(instructor.joinedAt)}
-                    </div>
+                  {instructor.featured && (
+                    <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 text-sm py-1 px-3">
+                      <Sparkles className="w-3 h-3 mr-1" />
+                      Featured
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3 text-muted-foreground flex-wrap">
+                  <div className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded-full text-sm">
+                    <MapPin className="w-3 h-3" />
+                    <span>{instructor.user?.country || "Global"}</span>
+                  </div>
+                  <div className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded-full text-sm">
+                    <Calendar className="w-3 h-3" />
+                    <span>Joined {formatDate(instructor.joinedAt)}</span>
                   </div>
                 </div>
-                {instructor.featured && (
-                  <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 shadow-lg text-lg py-1 px-3">
-                    Featured Instructor
-                  </Badge>
-                )}
               </div>
 
-              {/* Stats */}
-              <motion.div
-                className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <div className="flex items-center justify-center gap-1 mb-1">
-                    <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                    <span className="text-2xl font-bold">
-                      {instructor.stats.averageRating}
-                    </span>
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
+                {stats.map((stat, index) => (
+                  <div
+                    key={stat.label}
+                    className="text-center p-3 md:p-4 bg-gradient-to-br from-background to-muted/30 rounded-xl border border-border/50 shadow-sm"
+                  >
+                    <stat.icon className={`w-6 h-6 md:w-8 md:h-8 mx-auto mb-2 ${stat.color}`} />
+                    <div className="text-lg md:text-2xl font-bold text-foreground">
+                      {stat.value}
+                    </div>
+                    <p className="text-xs md:text-sm text-muted-foreground mt-1">{stat.label}</p>
                   </div>
-                  <p className="text-sm text-muted-foreground">Rating</p>
-                </div>
-                <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                  <div className="text-2xl font-bold mb-1">
-                    {instructor.stats.totalStudents.toLocaleString()}
-                  </div>
-                  <p className="text-sm text-muted-foreground">Students</p>
-                </div>
-                <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-                  <div className="text-2xl font-bold mb-1">
-                    {instructor.stats.totalCourses}
-                  </div>
-                  <p className="text-sm text-muted-foreground">Courses</p>
-                </div>
-                <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
-                  <div className="text-2xl font-bold mb-1">
-                    {instructor.stats.totalReviews.toLocaleString()}
-                  </div>
-                  <p className="text-sm text-muted-foreground">Reviews</p>
-                </div>
-              </motion.div>
+                ))}
+              </div>
 
-              {/* Social Links */}
-              <motion.div
-                className="flex items-center gap-3"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                {instructor.profile.website && (
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={instructor.profile.website} target="_blank">
-                      <Globe className="w-4 h-4 mr-2" />
-                      Website
-                    </Link>
-                  </Button>
+              {/* Desktop Social Links */}
+              <div className="hidden lg:flex items-center gap-2 flex-wrap">
+                {socialLinks.map((social, index) =>
+                  social.href && (
+                    <Button key={social.label} variant="outline" size="sm" asChild className="gap-2">
+                      <Link href={social.href} target="_blank">
+                        <social.icon className="w-4 h-4" />
+                        {social.label}
+                      </Link>
+                    </Button>
+                  )
                 )}
-                {instructor.profile.socialLinks?.youtube && (
-                  <Button variant="outline" size="sm" asChild>
-                    <Link
-                      href={instructor.profile.socialLinks.youtube}
-                      target="_blank"
-                    >
-                      <Youtube className="w-4 h-4 mr-2" />
-                      YouTube
-                    </Link>
-                  </Button>
-                )}
-                {instructor.profile.socialLinks?.twitter && (
-                  <Button variant="outline" size="sm" asChild>
-                    <Link
-                      href={instructor.profile.socialLinks.twitter}
-                      target="_blank"
-                    >
-                      <Twitter className="w-4 h-4 mr-2" />
-                      Twitter
-                    </Link>
-                  </Button>
-                )}
-                {instructor.profile.socialLinks?.linkedin && (
-                  <Button variant="outline" size="sm" asChild>
-                    <Link
-                      href={instructor.profile.socialLinks.linkedin}
-                      target="_blank"
-                    >
-                      <Linkedin className="w-4 h-4 mr-2" />
-                      LinkedIn
-                    </Link>
-                  </Button>
-                )}
-              </motion.div>
+              </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="courses" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-3 max-w-2xl">
-            <TabsTrigger value="courses">Courses</TabsTrigger>
-            <TabsTrigger value="about">About</TabsTrigger>
-            <TabsTrigger value="reviews">Reviews</TabsTrigger>
-          </TabsList>
+   <div className="container mx-auto min-h-[20px] max-h-[30px]">
+  <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 md:space-y-8">
+    {/* Tabs Navigation */}
+    <TabsList className="grid w-full grid-cols-3 bg-muted/50 backdrop-blur-sm p-1 rounded-xl md:rounded-2xl border border-border/50 flex items-center justify-center">
+      {tabs.map((tab) => (
+        <TabsTrigger
+          key={tab.value}
+          value={tab.value}
+          className="flex items-center gap-2 py-2 md:py- rounded-lg data-[state=active]:text-primary data-[state=active]:font-bold text-xs md:text-sm"
+        >
+          <tab.icon className="w-3 h-0 md:w-4 md:h-4" />
+          {tab.label}
+        </TabsTrigger>
+      ))}
+    </TabsList>
 
-          {/* Courses Tab */}
-          <TabsContent value="courses" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">
-                Courses by {instructor.user.name}
-              </h2>
-              <span className="text-muted-foreground">
-                {instructor.courses?.length || 0} courses
-              </span>
-            </div>
-
-            {instructor.courses && instructor.courses.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {instructor.courses.map((course, index) => (
-                  <CourseCard key={course._id} course={course} index={index} />
-                ))}
+          <AnimatePresence mode="wait">
+            {/* Courses Tab */}
+            <TabsContent value="courses" className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                  Courses
+                </h2>
+                <Badge variant="secondary" className="text-sm md:text-base py-1.5 px-3 md:px-4">
+                  {instructor.courses?.length || 0} courses
+                </Badge>
               </div>
-            ) : (
-              <Card>
-                <CardContent className="p-12 text-center">
-                  <BookOpen className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No courses yet</h3>
-                  <p className="text-muted-foreground">
-                    This instructor hasn't published any courses yet.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
 
-          {/* About Tab */}
-          <TabsContent value="about" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>About Me</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
-                  {instructor.profile.bio}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Areas of Expertise</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {instructor.profile.expertise.map((exp) => (
-                    <Badge
-                      key={exp}
-                      variant="secondary"
-                      className="text-sm py-1.5 px-3"
-                    >
-                      {exp}
-                    </Badge>
+              {instructor.courses && instructor.courses.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                  {instructor.courses.map((course, index) => (
+                    <CourseCard key={course._id || course.id} course={course} />
                   ))}
                 </div>
-              </CardContent>
-            </Card>
+              ) : (
+                <Card className="border-0 shadow-2xl bg-background/80 backdrop-blur-sm">
+                  <CardContent className="p-8 md:p-12 text-center">
+                    <BookOpen className="w-16 h-16 md:w-20 md:h-20 text-muted-foreground mx-auto mb-4 md:mb-6" />
+                    <h3 className="text-xl md:text-2xl font-bold mb-3">No Courses Yet</h3>
+                    <p className="text-muted-foreground md:text-lg">
+                      {instructor.user?.name} hasn't published any courses yet.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
 
-            {/* Instructor Details */}
-            {(instructor.profile.availability ||
-              instructor.profile.responseTime) && (
-              <Card>
+            {/* About Tab */}
+            <TabsContent value="about" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+                {/* Bio */}
+                <Card className="lg:col-span-2 border-0 shadow-2xl bg-background/80 backdrop-blur-sm">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+                      <GraduationCap className="w-5 h-5 md:w-6 md:h-6 text-primary" />
+                      About Me
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
+                      {instructor.profile?.bio || "Passionate instructor dedicated to helping students achieve their learning goals."}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {/* Expertise */}
+                <Card className="border-0 shadow-2xl bg-background/80 backdrop-blur-sm">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+                      <Zap className="w-5 h-5 text-yellow-500" />
+                      Expertise
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {(instructor.profile?.expertise || instructor.expertise || []).map((exp, index) => (
+                        <Badge
+                          key={exp}
+                          variant="secondary"
+                          className="text-sm py-1.5 px-2.5 bg-primary/10 text-primary border-primary/20"
+                        >
+                          {exp}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Details */}
+              <Card className="border-0 shadow-2xl bg-background/80 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle>Instructor Details</CardTitle>
+                  <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+                    <Target className="w-5 h-5 text-blue-500" />
+                    Details
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {instructor.profile.availability && (
-                      <div>
-                        <h4 className="font-medium text-sm text-muted-foreground mb-1">
-                          Availability
-                        </h4>
-                        <p className="text-foreground">
-                          {instructor.profile.availability}
-                        </p>
-                      </div>
-                    )}
-                    {instructor.profile.responseTime && (
-                      <div>
-                        <h4 className="font-medium text-sm text-muted-foreground mb-1">
-                          Response Time
-                        </h4>
-                        <p className="text-foreground">
-                          {instructor.profile.responseTime}
-                        </p>
-                      </div>
-                    )}
-                    {instructor.profile.officeHours && (
-                      <div>
-                        <h4 className="font-medium text-sm text-muted-foreground mb-1">
-                          Office Hours
-                        </h4>
-                        <p className="text-foreground">
-                          {instructor.profile.officeHours}
-                        </p>
-                      </div>
-                    )}
-                    {instructor.profile.contactEmail && (
-                      <div>
-                        <h4 className="font-medium text-sm text-muted-foreground mb-1">
-                          Contact Email
-                        </h4>
-                        <p className="text-foreground">
-                          {instructor.profile.contactEmail}
-                        </p>
-                      </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {[
+                      { label: "Availability", value: instructor.profile?.availability, icon: Calendar },
+                      { label: "Response Time", value: instructor.profile?.responseTime, icon: TrendingUp },
+                      { label: "Office Hours", value: instructor.profile?.officeHours, icon: Users },
+                      { label: "Contact", value: instructor.profile?.contactEmail, icon: Globe },
+                    ].map((detail, index) =>
+                      detail.value && (
+                        <div
+                          key={detail.label}
+                          className="text-center p-3 bg-muted/30 rounded-xl border border-border/50"
+                        >
+                          <detail.icon className="w-6 h-6 md:w-8 md:h-8 mx-auto mb-2 text-primary" />
+                          <h4 className="font-medium text-xs md:text-sm text-muted-foreground mb-1">
+                            {detail.label}
+                          </h4>
+                          <p className="text-foreground font-medium text-sm">{detail.value}</p>
+                        </div>
+                      )
                     )}
                   </div>
                 </CardContent>
               </Card>
-            )}
-          </TabsContent>
+            </TabsContent>
 
-          {/* Reviews Tab */}
-          <TabsContent value="reviews">
-            <Card>
-              <CardHeader>
-                <CardTitle>Student Reviews</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <TrendingUp className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">
-                    Student Feedback
-                  </h3>
-                  <p className="text-muted-foreground mb-4">
-                    Average rating:{" "}
-                    <span className="font-bold text-foreground">
-                      {instructor.stats.averageRating}
-                    </span>{" "}
-                    from {instructor.stats.totalReviews} reviews
-                  </p>
-                  <div className="flex items-center justify-center gap-2 mb-6">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`w-6 h-6 ${
-                          star <= Math.floor(instructor.stats.averageRating)
-                            ? "text-yellow-500 fill-yellow-500"
-                            : "text-gray-300"
-                        }`}
-                      />
-                    ))}
+            {/* Reviews Tab */}
+            <TabsContent value="reviews">
+              <Card className="border-0 shadow-2xl bg-background/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+                    <Star className="w-5 h-5 md:w-6 md:h-6 text-yellow-500" />
+                    Reviews & Ratings
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8 md:py-12">
+                    <TrendingUp className="w-16 h-16 md:w-20 md:h-20 text-primary mx-auto mb-4 md:mb-6" />
+
+                    <h3 className="text-xl md:text-2xl font-bold mb-4">Student Feedback</h3>
+                    <p className="text-muted-foreground md:text-lg mb-6">
+                      Average rating:{" "}
+                      <span className="font-bold text-xl md:text-2xl text-yellow-500">
+                        {instructor.stats?.averageRating?.toFixed(1) || "4.5"}
+                      </span>{" "}
+                      from {instructor.stats?.totalReviews?.toLocaleString() || "0"} reviews
+                    </p>
+
+                    <div className="flex items-center justify-center gap-1 mb-6">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`w-6 h-6 md:w-8 md:h-8 ${
+                            star <= Math.floor(instructor.stats?.averageRating || 4.5)
+                              ? "text-yellow-500 fill-yellow-500"
+                              : "text-gray-300"
+                          }`}
+                        />
+                      ))}
+                    </div>
+
+                    <p className="text-muted-foreground md:text-lg max-w-md mx-auto">
+                      Detailed reviews and ratings will be available soon.
+                    </p>
                   </div>
-                  <p className="text-muted-foreground">
-                    Detailed reviews and ratings coming soon.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </AnimatePresence>
         </Tabs>
       </div>
     </div>
   );
 }
 
+// Simplified Course Card Component
+function CourseCard({ course }: { course: any }) {
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  return (
+    <Card className="h-full overflow-hidden border border-border/50 bg-card hover:shadow-lg transition-all duration-300">
+      <CardContent className="p-0">
+        {/* Course Image */}
+        <div className="relative h-40 md:h-48 overflow-hidden">
+          {course.image ? (
+            <Image
+              src={course.image}
+              alt={course.title}
+              fill
+              className="object-cover hover:scale-105 transition-transform duration-500"
+              onLoad={() => setImageLoaded(true)}
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center">
+              <BookOpen className="w-8 h-8 md:w-12 md:h-12 text-white/80" />
+            </div>
+          )}
+          <div className="absolute inset-0 bg-black/20" />
+
+          {/* Badges */}
+          <div className="absolute top-3 left-3 right-3 flex justify-between">
+            {course.isFeatured && (
+              <Badge className="bg-yellow-500 text-white border-0 text-xs">
+                <Sparkles className="w-3 h-3 mr-1" />
+                Featured
+              </Badge>
+            )}
+            <Badge variant="secondary" className="bg-background/80 text-xs">
+              {course.level}
+            </Badge>
+          </div>
+        </div>
+
+        {/* Course Content */}
+        <div className="p-4">
+          <Badge variant="outline" className="mb-2 bg-primary/10 text-primary border-primary/20 text-xs">
+            {course.category}
+          </Badge>
+
+          <h3 className="font-bold text-base mb-2 line-clamp-2 leading-tight">
+            {course.title}
+          </h3>
+
+          <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
+            {course.description || course.subtitle}
+          </p>
+
+          {/* Stats */}
+          <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
+            <div className="flex items-center gap-1">
+              <Users className="w-3 h-3" />
+              <span>{(course.studentsEnrolled || 0).toLocaleString()}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+              <span>{course.ratings?.average || course.rating || 4.5}</span>
+            </div>
+          </div>
+
+          {/* Price & Action */}
+          <div className="flex items-center justify-between pt-3 border-t border-border/50">
+            <div className="font-bold text-lg text-primary">
+              ${course.price || 0}
+              {course.originalPrice && (
+                <span className="text-sm text-muted-foreground line-through ml-2">
+                  ${course.originalPrice}
+                </span>
+              )}
+            </div>
+            <Button
+              asChild
+              size="sm"
+              className="bg-primary hover:bg-primary/90"
+            >
+              <Link href={`/courses/${course._id}`}>
+                <span className="hidden xs:inline mr-2">View</span>
+                Course
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Simplified Skeleton
 function InstructorProfileSkeleton() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/10">
+      {/* Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-20 -right-20 w-40 h-40 md:w-80 md:h-80 bg-primary/5 rounded-full blur-3xl"></div>
+      </div>
+
       {/* Header Skeleton */}
-      <div className="border-b">
-        <div className="container mx-auto px-4 py-6">
-          <Skeleton className="h-10 w-40 mb-6" />
-          <div className="flex flex-col lg:flex-row gap-8 items-start">
-            <Skeleton className="w-32 h-32 rounded-full" />
-            <div className="flex-1 space-y-4">
-              <Skeleton className="h-8 w-64" />
-              <Skeleton className="h-4 w-48" />
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="relative bg-background/80 backdrop-blur-md border-b border-border/50">
+        <div className="container mx-auto px-4 py-4 md:py-6">
+          {/* Navigation Skeleton */}
+          <div className="flex items-center gap-3 mb-6 md:mb-8 flex-wrap">
+            <Skeleton className="h-8 w-32 rounded-full" />
+            <div className="flex-1"></div>
+            <Skeleton className="h-8 w-20 rounded-full" />
+            <Skeleton className="h-8 w-20 rounded-full" />
+          </div>
+
+          {/* Info Skeleton */}
+          <div className="flex flex-col lg:flex-row gap-6 items-start">
+            <Skeleton className="w-24 h-24 md:w-32 md:h-32 rounded-2xl" />
+            <div className="flex-1 space-y-4 md:space-y-6">
+              <div className="space-y-2">
+                <Skeleton className="h-8 md:h-12 w-48 md:w-64 rounded-lg" />
+                <div className="flex gap-3">
+                  <Skeleton className="h-6 w-24 rounded-full" />
+                  <Skeleton className="h-6 w-32 rounded-full" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} className="h-20 rounded-lg" />
+                  <Skeleton key={i} className="h-16 md:h-20 rounded-xl" />
                 ))}
               </div>
-              <Skeleton className="h-10 w-32" />
+
+              <div className="hidden lg:flex gap-2">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Skeleton key={i} className="h-8 w-24 rounded-full" />
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Content Skeleton */}
-      <div className="container mx-auto px-4 py-8">
-        <Skeleton className="h-10 w-96 mb-8" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="container mx-auto px-4 py-6 md:py-8">
+        <Skeleton className="h-12 w-full max-w-2xl rounded-2xl mb-6 md:mb-8" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-80 rounded-lg" />
+            <Skeleton key={i} className="h-80 rounded-2xl" />
           ))}
         </div>
       </div>

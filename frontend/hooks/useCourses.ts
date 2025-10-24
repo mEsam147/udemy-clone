@@ -48,7 +48,7 @@
 //     queryFn: () => courseService.getAllCourses(params),
 //     select: (response) => {
 //       console.log("Courses API Response:", response);
-      
+
 //       // Handle different response structures
 //       if (Array.isArray(response)) {
 //         return {
@@ -61,19 +61,19 @@
 //           }
 //         };
 //       }
-      
+
 //       // Handle your backend's pagination structure
 //       if (response && typeof response === 'object') {
 //         const data = response.data || response.courses || [];
-        
+
 //         // Extract from your backend structure
 //         const backendPagination = response.pagination || {};
 //         const count = response.count || data.length;
-        
+
 //         // Calculate total pages based on count and limit
 //         const totalItems = count;
 //         const calculatedTotalPages = Math.ceil(totalItems / itemsPerPage);
-        
+
 //         // Determine current page from next/prev structure
 //         let calculatedCurrentPage = currentPage;
 //         if (backendPagination.next) {
@@ -92,10 +92,10 @@
 //         };
 
 //         console.log("Processed pagination:", pagination);
-        
+
 //         return { data, pagination };
 //       }
-      
+
 //       // Fallback
 //       return { data: [], pagination: null };
 //     },
@@ -112,7 +112,7 @@
 //     queryFn: () => courseService.searchCourses(query, "student", "user-id"),
 //     select: (response) => {
 //       if (!response) return { data: [], pagination: null };
-      
+
 //       if (Array.isArray(response)) {
 //         return {
 //           data: response,
@@ -124,15 +124,15 @@
 //           }
 //         };
 //       }
-      
+
 //       if (response && typeof response === 'object') {
 //         const data = response.data || response.courses || [];
 //         const backendPagination = response.pagination || {};
 //         const count = response.count || data.length;
-        
+
 //         const totalItems = count;
 //         const calculatedTotalPages = Math.ceil(totalItems / itemsPerPage);
-        
+
 //         let calculatedCurrentPage = currentPage;
 //         if (backendPagination.next) {
 //           calculatedCurrentPage = backendPagination.next.page - 1;
@@ -149,7 +149,7 @@
 
 //         return { data, pagination };
 //       }
-      
+
 //       return { data: [], pagination: null };
 //     },
 //     enabled: !!query,
@@ -439,6 +439,7 @@ import {
 } from "@/lib/types";
 
 import {useAuth} from "@/context/AuthContext"
+import { useState } from "react";
 // Query keys factory
 export const courseKeys = {
   all: ["courses"] as const,
@@ -483,7 +484,7 @@ export const useCourses = (params?: Record<string, any>) => {
     queryFn: () => courseService.getAllCourses(params),
     select: (response) => {
       console.log("Courses API Response:", response);
-      
+
       // Handle different response structures
       if (Array.isArray(response)) {
         return {
@@ -496,19 +497,19 @@ export const useCourses = (params?: Record<string, any>) => {
           }
         };
       }
-      
+
       // Handle your backend's pagination structure
       if (response && typeof response === 'object') {
         const data = response.data || response.courses || [];
-        
+
         // Extract from your backend structure
         const backendPagination = response.pagination || {};
         const count = response.count || data.length;
-        
+
         // Calculate total pages based on count and limit
         const totalItems = count;
         const calculatedTotalPages = Math.ceil(totalItems / itemsPerPage);
-        
+
         // Determine current page from next/prev structure
         let calculatedCurrentPage = currentPage;
         if (backendPagination.next) {
@@ -527,10 +528,10 @@ export const useCourses = (params?: Record<string, any>) => {
         };
 
         console.log("Processed pagination:", pagination);
-        
+
         return { data, pagination };
       }
-      
+
       // Fallback
       return { data: [], pagination: null };
     },
@@ -587,7 +588,7 @@ export const useSearchCourses = (
       if (response && typeof response === 'object') {
         const data = response.data || response.courses || response || [];
         const totalItems = response.count || response.total || data.length;
-        
+
         const backendPagination = response.pagination || {};
         let currentPage = filters?.page || 1;
         if (backendPagination.next) {
@@ -633,7 +634,7 @@ export const useSearchCourses = (
 // Search courses hook
 // export const useSearchCourses = (
 //   query: string,
-//   role: string = "student", 
+//   role: string = "student",
 //   userId: string = "user-id",
 //   options: UseCoursesOptions = {}
 // ) => {
@@ -787,7 +788,7 @@ export const useCourseReviews = ({
     queryFn: () => courseService.getCourseReviews(courseId),
     select: (response) => {
       const data = response.data || response;
-      
+
       // Handle different response structures
       if (Array.isArray(data)) {
         return {
@@ -797,7 +798,7 @@ export const useCourseReviews = ({
           ratingDistribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
         };
       }
-      
+
       return {
         reviews: data.reviews || [],
         averageRating: data.averageRating || 0,
@@ -869,7 +870,7 @@ export const useUpdateProgress = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ courseId, data }: { courseId: string; data: any }) => 
+    mutationFn: ({ courseId, data }: { courseId: string; data: any }) =>
       courseService.updateProgress(courseId, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["course-progress", variables.courseId] });
@@ -889,8 +890,20 @@ export const useIsEnrolled = (courseId: string, options: UseCoursesOptions = {})
 };
 
 // Wishlist hooks
+// hooks/useWishlistActions.ts - FIXED VERSION
 export const useWishlistActions = (courseId: string) => {
   const queryClient = useQueryClient();
+  const [optimisticStatus, setOptimisticStatus] = useState<boolean | null>(null);
+
+  const { data: wishlistStatus, isLoading: wishlistLoading } = useQuery({
+    queryKey: courseKeys.wishlistStatus(courseId),
+    queryFn: () => courseService.getWishlistStatus(courseId),
+    enabled: !!courseId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Use optimistic status if available, otherwise use server status
+  const currentIsInWishlist = optimisticStatus !== null ? optimisticStatus : (wishlistStatus?.isInWishlist || false);
 
   const toggleWishlistMutation = useMutation({
     mutationFn: async (action: "add" | "remove") => {
@@ -900,18 +913,42 @@ export const useWishlistActions = (courseId: string) => {
         return await courseService.removeFromWishlist(courseId);
       }
     },
+    onMutate: async (action) => {
+      await queryClient.cancelQueries({ queryKey: courseKeys.wishlistStatus(courseId) });
+
+      // Snapshot the previous value
+      const previousStatus = queryClient.getQueryData(courseKeys.wishlistStatus(courseId));
+
+      // Optimistically update to the new value
+      const newStatus = action === "add";
+      setOptimisticStatus(newStatus);
+
+      queryClient.setQueryData(courseKeys.wishlistStatus(courseId), (old: any) => ({
+        ...old,
+        data: {
+          ...old?.data,
+          isInWishlist: newStatus,
+          wishlistCount: newStatus ? (old?.data?.wishlistCount || 0) + 1 : Math.max(0, (old?.data?.wishlistCount || 1) - 1),
+        },
+      }));
+
+      return { previousStatus };
+    },
     onSuccess: (data, action) => {
+      // Clear optimistic status
+      setOptimisticStatus(null);
+
       // Invalidate all relevant wishlist queries
       queryClient.invalidateQueries({ queryKey: courseKeys.wishlist() });
       queryClient.invalidateQueries({ queryKey: courseKeys.wishlistStatus(courseId) });
-      
+
       // Update user profile if exists
       queryClient.invalidateQueries({ queryKey: ["user-profile"] });
 
-      // Optimistically update course data
+      // Update course data
       queryClient.setQueryData(courseKeys.detail(courseId), (old: any) => {
         if (!old) return old;
-        
+
         const courseData = old.data || old;
         return {
           ...old,
@@ -922,25 +959,27 @@ export const useWishlistActions = (courseId: string) => {
         };
       });
     },
-    onError: (error, action) => {
+    onError: (error, action, context) => {
+      // Rollback to previous state on error
+      setOptimisticStatus(null);
+      if (context?.previousStatus) {
+        queryClient.setQueryData(courseKeys.wishlistStatus(courseId), context.previousStatus);
+      }
       console.error(`Wishlist ${action} failed:`, error);
+    },
+    onSettled: () => {
+      // Ensure we're in sync with server
+      queryClient.invalidateQueries({ queryKey: courseKeys.wishlistStatus(courseId) });
     },
   });
 
-  const { data: wishlistStatus, isLoading: wishlistLoading } = useQuery({
-    queryKey: courseKeys.wishlistStatus(courseId),
-    queryFn: () => courseService.getWishlistStatus(courseId),
-    enabled: !!courseId,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const toggleWishlist = (currentStatus: boolean) => {
-    const action = currentStatus ? "remove" : "add";
+  const toggleWishlist = () => {
+    const action = currentIsInWishlist ? "remove" : "add";
     return toggleWishlistMutation.mutateAsync(action);
   };
 
   return {
-    isInWishlist: wishlistStatus?.isInWishlist || false,
+    isInWishlist: currentIsInWishlist,
     wishlistCount: wishlistStatus?.wishlistCount || 0,
     toggleWishlist,
     isLoading: wishlistLoading || toggleWishlistMutation.isPending,
@@ -968,7 +1007,7 @@ export const useAddReview = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ courseId, data }: { courseId: string; data: any }) => 
+    mutationFn: ({ courseId, data }: { courseId: string; data: any }) =>
       courseService.addReview(courseId, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: courseKeys.reviews(variables.courseId) });
@@ -1033,7 +1072,7 @@ export const useUpdateCourse = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => 
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
       courseService.updateCourse(id, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: courseKeys.lists() });
@@ -1061,7 +1100,7 @@ export const useAddLesson = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ courseId, data }: { courseId: string; data: any }) => 
+    mutationFn: ({ courseId, data }: { courseId: string; data: any }) =>
       courseService.addLesson(courseId, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: courseKeys.lessons(variables.courseId) });
@@ -1073,7 +1112,7 @@ export const useUpdateLesson = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ courseId, lessonId, data }: { courseId: string; lessonId: string; data: FormData }) => 
+    mutationFn: ({ courseId, lessonId, data }: { courseId: string; lessonId: string; data: FormData }) =>
       courseService.updateLesson(courseId, lessonId, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: courseKeys.lessons(variables.courseId) });
@@ -1085,7 +1124,7 @@ export const useDeleteLesson = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ courseId, lessonId }: { courseId: string; lessonId: string }) => 
+    mutationFn: ({ courseId, lessonId }: { courseId: string; lessonId: string }) =>
       courseService.deleteLesson(courseId, lessonId),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: courseKeys.lessons(variables.courseId) });
@@ -1098,7 +1137,7 @@ export const useUpdateCourseStatus = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ courseId, status }: { courseId: string; status: string }) => 
+    mutationFn: ({ courseId, status }: { courseId: string; status: string }) =>
       courseService.updateCourseStatus(courseId, status),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: courseKeys.lists() });
@@ -1112,7 +1151,7 @@ export const useBulkUpdateCourseStatus = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ courseIds, status }: { courseIds: string[]; status: string }) => 
+    mutationFn: ({ courseIds, status }: { courseIds: string[]; status: string }) =>
       courseService.bulkUpdateCourseStatus(courseIds, status),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: courseKeys.lists() });
@@ -1144,7 +1183,7 @@ export const useUpdateInstructorApplication = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId, status, reason }: { userId: string; status: "approved" | "rejected"; reason?: string }) => 
+    mutationFn: ({ userId, status, reason }: { userId: string; status: "approved" | "rejected"; reason?: string }) =>
       courseService.updateInstructorApplication(userId, status, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["instructor-applications"] });

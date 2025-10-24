@@ -49,6 +49,7 @@ import { paymentService } from "@/services/payment.service";
 import { enrollmentsService } from "@/services/enrollment.service";
 import { loadStripe } from "@stripe/stripe-js";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 // Animation variants
 const fadeInUp = {
@@ -80,6 +81,7 @@ export default function CourseDetailPage({
   const locale = useLocale();
   const { toast } = useToast();
   const router = useRouter();
+  const {user} = useAuth()
 
   console.log("initCourse", initialCourse);
   console.log("initialReviews", initialReviews);
@@ -164,7 +166,6 @@ export default function CourseDetailPage({
     }
   }, [course?.id]);
 
-  console.log("enrollmentStatus", enrollmentStatus);
 
   // Wishlist functionality
 const {
@@ -173,6 +174,7 @@ const {
   isLoading: wishlistLoading,
   wishlistCount = 0,
 } = useWishlistActions(course?.id!);
+
 
 
   // Handle errors
@@ -212,30 +214,43 @@ const {
   };
 
   // Handle wishlist toggle with animation
-  const handleWishlistToggle = async (): Promise<void> => {
-    if (!course?._id) return;
+// components/courses/course-detail-page.tsx - FIXED HANDLER
+const handleWishlistToggle = async (): Promise<void> => {
+  if (!course?.id) return;
 
-    try {
-      await toggleWishlist(isInWishlist);
-      toast({
-        title: isInWishlist
-          ? "❤️ Removed from Wishlist"
-          : "💝 Added to Wishlist",
-        description: isInWishlist
-          ? "Course removed from your wishlist"
-          : "Course added to your wishlist",
-        duration: 3000,
-      });
-    } catch (error) {
-      console.error("Wishlist toggle failed:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update wishlist. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
+  if (!user) {
+    router.push('/auth/signin');
+    return;
+  }
 
+  console.log("Toggling wishlist. Current state:", isInWishlist);
+  console.log("course from det", course);
+
+  try {
+    // Use the current state to determine the action
+    const currentState = isInWishlist;
+
+    await toggleWishlist();
+
+    // Show toast based on the action that was just performed (opposite of current state)
+    toast({
+      title: currentState
+        ? "❤️ Removed from Wishlist"
+        : "💝 Added to Wishlist",
+      description: currentState
+        ? "Course removed from your wishlist"
+        : "Course added to your wishlist",
+      duration: 3000,
+    });
+  } catch (error) {
+    console.error("Wishlist toggle failed:", error);
+    toast({
+      title: "Error",
+      description: "Failed to update wishlist. Please try again.",
+      variant: "destructive",
+    });
+  }
+};
   // Handle share functionality
   const handleShare = async (): Promise<void> => {
     if (!course) return;
@@ -277,9 +292,15 @@ const {
 
   // Handle purchase/enrollment
   const handlePurchase = async (): Promise<void> => {
+
     if (!course) return;
 
     setIsPurchasing(true);
+
+    if (!user) {
+      router.push(`/auth/signin`);
+      return;
+    }
 
     try {
       if (course.price === 0) {
@@ -328,7 +349,29 @@ const {
   };
 
   // Handle lesson click - show preview modal for non-enrolled users
+  // const handleLessonClick = (lesson: CourseLesson) => {
+  //   if (enrollmentStatus.isEnrolled) {
+  //     // Navigate to the learn page for enrolled users
+  //     router.push(`/courses/${course?.id}/learn?lesson=${lesson._id}`);
+  //   } else if (lesson.isPreview) {
+  //     // Show preview modal for non-enrolled users
+  //     setCurrentPreviewLesson(lesson);
+  //     setIsPreviewModalOpen(true);
+  //   } else {
+  //     // Show enrollment prompt for non-preview lessons
+  //     toast({
+  //       title: "Enrollment Required",
+  //       description: "Please enroll in the course to access this lesson.",
+  //       variant: "destructive",
+  //     });
+  //   }
+  // };
+
   const handleLessonClick = (lesson: CourseLesson) => {
+
+
+  if (user) {
+    // User is authenticated, handle the lesson click as before
     if (enrollmentStatus.isEnrolled) {
       // Navigate to the learn page for enrolled users
       router.push(`/courses/${course?.id}/learn?lesson=${lesson._id}`);
@@ -344,8 +387,11 @@ const {
         variant: "destructive",
       });
     }
-  };
-
+  } else {
+    // User is not authenticated, navigate to the signin page
+    router.push('/auth/signin');
+  }
+};
   // Handle preview modal close
   const handlePreviewModalClose = () => {
     setIsPreviewModalOpen(false);
@@ -1298,7 +1344,7 @@ const {
 
       {/* Preview Lesson Modal */}
       <Dialog open={isPreviewModalOpen} onOpenChange={setIsPreviewModalOpen}>
-        <DialogContent className="max-w-4xl w-full h-[90vh] p-0 overflow-hidden">
+        <DialogContent className="max-w-4xl min-w-6xl w-full h-[90vh] p-0 overflow-y-auto custom-scrollbar-thin">
           <div className="flex flex-col h-full">
             {/* Header */}
             <DialogHeader className="flex-shrink-0 p-6 border-b">
