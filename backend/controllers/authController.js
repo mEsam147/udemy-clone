@@ -348,7 +348,7 @@ exports.googleAuth = (req, res) => {
   })
 
   // Redirect to frontend success page
-  res.redirect(`${process.env.CLIENT_URL}`)
+  res.redirect(`${process.env.CLIENT_URL}/auth/success?token=${token}`)
 }
 
 exports.githubAuth = (req, res) => {
