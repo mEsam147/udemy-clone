@@ -330,7 +330,8 @@ app.use(helmet())
 // THEN CORS with proper configuration
 app.use(
   cors({
-    origin: "https://udemy-clone-sigma.vercel.app"||process.env.CLIENT_URL || 'http://localhost:3000',
+    origin:
+      'https://udemy-clone-sigma.vercel.app' || process.env.CLIENT_URL || 'http://localhost:3000',
     credentials: true, // Allow cookies to be sent
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   })
@@ -353,7 +354,7 @@ app.use(passport.initialize())
 cloudinaryConfig()
 
 // THEN Routes
-app.use('/api/courses/seed', require('./routes/seedRoutes'))
+// app.use('/api/courses/seed', require('./routes/seedRoutes'))
 
 app.use('/api/auth', require('./routes/auth'))
 app.use('/api/courses', require('./routes/courses'))
